@@ -1,0 +1,38 @@
+{
+    "entrypoint": "de.geolykt.s2dmenues.S2DMenues",
+    "name": "S2DMenues",
+    "version": "0.0.1-SNAPSHOT",
+    "dependencies": [ "StarloaderAPI" ],
+    "codeModifiers": [ ],
+    "externalDependencies" : {
+        "repositories" : [
+            {
+                 "name" : "stianloader",
+                 "url" : "https://stianloader.org/maven/",
+                 "mirrorable" : false
+             }, {
+                 "name" : "Central",
+                 "url" : "https://repo1.maven.org/maven2/",
+                 "mirrorOnly" : true
+             }, {
+                 "name" : "Jitpack",
+                 "url" : "https://jitpack.io/",
+                 "mirrorOnly" : true
+             }, {
+                 "name" : "stianloader-central-mirror",
+                 "url" : "https://stianloader.org/central-mirror/",
+                 "mirrorable" : false
+             }
+        ],
+        "artifacts" : [
+            {
+                "group": "com.github.raeleus.TenPatch",
+                "artifact": "tenpatch",
+                "version": "5.2.3",
+                "exclusions": [
+                    "com.badlogicgames.gdx:gdx"
+                ]
+            }
+        ]
+    }
+}

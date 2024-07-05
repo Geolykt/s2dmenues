@@ -1,0 +1,17 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenLocal()
+        mavenCentral()
+        maven {
+            name = 'stianloader-maven'
+            url = 'https://stianloader.org/maven/'
+        }
+        maven {
+            name 'fabric'
+            url 'https://maven.fabricmc.net/'
+        }
+    }
+}
+
+rootProject.name = 's2dmenues'

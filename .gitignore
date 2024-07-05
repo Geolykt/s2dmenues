@@ -1,0 +1,13 @@
+.gradle
+build
+bin
+.*
+!.gitignore
+*.aseprite
+*.launch
+mods
+classes
+data
+
+*.png
+!src/main/resources/*.png
