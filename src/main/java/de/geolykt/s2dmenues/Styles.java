@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Disposable;
@@ -32,11 +33,17 @@ public class Styles implements Disposable {
     @NotNull
     public final TextButtonStyle cancelButtonStyle;
     @NotNull
+    public final TextButtonStyle confirmButtonStyle;
+    @NotNull
     public final WindowStyle windowStyleTranslucent;
+    @NotNull
+    public final WindowStyle windowStylePlastic;
     @NotNull
     public final SplitPaneStyle splitPaneStyle;
     @NotNull
     public final ScrollPaneStyle scrollPaneStyle;
+    @NotNull
+    public final TextFieldStyle textFieldStyle;
 
     private Styles() {
         this.buttonStyle = new TextButtonStyle();
@@ -63,11 +70,29 @@ public class Styles implements Disposable {
         this.cancelButtonStyle.disabled = TextureCache.getInstance().getGradientWindowTenpatch(true, new Color(0x487C9AFF), 0.5F);
         this.cancelButtonStyle.disabled.setMinWidth(300F);
 
+        this.confirmButtonStyle = new TextButtonStyle();
+        this.confirmButtonStyle.font = Drawing.getSpaceFont();
+        this.confirmButtonStyle.fontColor = Color.WHITE;
+        this.confirmButtonStyle.up = TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(0x20AF20FF), 0.5F);
+        this.confirmButtonStyle.up.setMinWidth(300F);
+        this.confirmButtonStyle.over = TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(0x7FAF7FFF), 0.5F);
+        this.confirmButtonStyle.over.setMinWidth(300F);
+        this.confirmButtonStyle.down = TextureCache.getInstance().getGradientWindowTenpatch(true, new Color(0x00AF0000FF), 0.5F);
+        this.confirmButtonStyle.down.setMinWidth(300F);
+        this.confirmButtonStyle.disabled = TextureCache.getInstance().getGradientWindowTenpatch(true, new Color(0x7C489AFF), 0.5F);
+        this.confirmButtonStyle.disabled.setMinWidth(300F);
+
         this.windowStyleTranslucent = new WindowStyle();
         this.windowStyleTranslucent.titleFont = Drawing.getSpaceFont();
         this.windowStyleTranslucent.titleFontColor = Color.WHITE;
         this.windowStyleTranslucent.background = TextureCache.getInstance().getGradientWindowTenpatch(true, new Color(0xFF00007F), 0.5F);
         this.windowStyleTranslucent.stageBackground = new TextureRegionDrawable(Drawing.getTextureProvider().getSinglePixelSquare()).tint(new Color(0x80808080));
+
+        this.windowStylePlastic = new WindowStyle();
+        this.windowStylePlastic.titleFont = Drawing.getSpaceFont();
+        this.windowStylePlastic.titleFontColor = Color.WHITE;
+        this.windowStylePlastic.background = TextureCache.getInstance().getGradientWindowTenpatch(true, new Color(0x7F7F7FFF), 0.5F);
+        this.windowStylePlastic.stageBackground = new TextureRegionDrawable(Drawing.getTextureProvider().getSinglePixelSquare()).tint(new Color(0x80808080));
 
         this.splitPaneStyle = new SplitPaneStyle();
         this.splitPaneStyle.handle = new TextureRegionDrawable(Drawing.getTextureProvider().getSinglePixelSquare()).tint(Color.BLACK);
@@ -77,6 +102,11 @@ public class Styles implements Disposable {
         this.scrollPaneStyle.vScrollKnob = new TextureRegionDrawable(Drawing.getTextureProvider().getSinglePixelSquare()).tint(Color.LIGHT_GRAY);
         this.scrollPaneStyle.vScrollKnob.setMinHeight(8);
         this.scrollPaneStyle.vScrollKnob.setMinWidth(4);
+
+        this.textFieldStyle = new TextFieldStyle();
+        this.textFieldStyle.font = Drawing.getSpaceFont();
+        this.textFieldStyle.fontColor = Color.WHITE;
+        this.textFieldStyle.background = TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(Color.LIGHT_GRAY), 0.66F);
     }
 
     public void dispose() {

@@ -1,0 +1,5 @@
+RAS v1 std
+
+ all        ACC_PRIVATE     ACC_PUBLIC      snoddasmannen/galimulator/FractalStarGenerator          drawLand                Z
+ all        ACC_PRIVATE     ACC_PUBLIC      snoddasmannen/galimulator/FractalStarGenerator          seedString              Ljava/lang/String;
+ all        0               ACC_PUBLIC      snoddasmannen/galimulator/Star                          pathAngle               F

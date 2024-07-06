@@ -4,6 +4,7 @@
     "version": "0.0.1-SNAPSHOT",
     "dependencies": [ "StarloaderAPI" ],
     "codeModifiers": [ ],
+    "reversibleAccessSetter": "s2dmenues.ras",
     "externalDependencies" : {
         "repositories" : [
             {

@@ -25,6 +25,7 @@ repositories {
 }
 
 starplane {
+    withRAS(rootProject.file("src/main/resources/s2dmenues.ras"))
     mappingsFile("tinyv2", "newStarmap.tinyv2")
 }
 
