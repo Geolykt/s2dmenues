@@ -25,11 +25,15 @@ import com.badlogic.gdx.utils.Align;
 
 import de.geolykt.s2dmenues.RunnableClickListener;
 import de.geolykt.s2dmenues.Styles;
+import de.geolykt.starloader.api.gui.Drawing;
 
 import snoddasmannen.galimulator.FractalStarGenerator;
 import snoddasmannen.galimulator.MapData;
+import snoddasmannen.galimulator.ProceduralScenarioSource;
 import snoddasmannen.galimulator.ProceduralStarGenerator;
 import snoddasmannen.galimulator.Space;
+import snoddasmannen.galimulator.Space.ConnectionMethod;
+import snoddasmannen.galimulator.Space.StarAdjustmentMethod;
 import snoddasmannen.galimulator.StarGenerator;
 
 public class GenGalaxyWindow extends Dialog {
@@ -73,6 +77,8 @@ public class GenGalaxyWindow extends Dialog {
     private final TextButton starAdjustmentsButton;
     @NotNull
     private final TextButton starlaneGeneratorButton;
+    @NotNull
+    private final TextButton galaxyGenerateButton;
 
     public GenGalaxyWindow(@NotNull WindowStyle style) {
         super("Generate Galaxy", style);
@@ -83,6 +89,13 @@ public class GenGalaxyWindow extends Dialog {
         this.contentTableUpper = new Table();
         this.masterSplitPane = new SplitPane(this.contentTableUpper, null, true, Styles.getInstance().splitPaneStyle);
 
+        this.galaxyGenerateButton = new RunnableTextButton("Generate Galaxy!", Styles.getInstance().confirmButtonStyle, (button) -> {
+            this.mapdata.setConnectionMethod(ConnectionMethod.STANDARD); // TODO Custom starlane generators
+            this.mapdata.setStarAdjustmentMethod(StarAdjustmentMethod.NORMAL); // TODO Custom adjustment methods
+            this.mapdata.setScenarioSource(ProceduralScenarioSource.CLASSIC); // TODO Allow to set scenario sources
+            Space.generateGalaxySync(this.galaxySize, this.mapdata);
+            Drawing.setShownStage(null);
+        });
         this.galaxySizeButton = new RunnableTextButton("", Styles.getInstance().buttonStyle, (button) -> {
             // Display modal
         });
@@ -162,6 +175,7 @@ public class GenGalaxyWindow extends Dialog {
         VerticalGroup options = new VerticalGroup();
 
         options.addActor(new NOPActor(15, 15));
+        options.addActor(this.galaxyGenerateButton);
         options.addActor(this.openGeneratorOptionsButton);
         options.addActor(this.galaxyTypeButton);
         options.addActor(this.galaxySizeButton);
