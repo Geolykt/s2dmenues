@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
@@ -123,13 +124,21 @@ public class MainMenuProvider {
         load.addListener(new RunnableClickListener(() -> {
             MainMenuProvider.displayLoadMenu(stage);
         }));
+
+        // Keep a reference to the galaxy generation window in order to avoid settings getting reset when reopening
+        // the galaxy generation window. Though it probably could be all static variables instead - who knows?
+        AtomicReference<GenGalaxyWindow> genGalaxyWindow = new AtomicReference<>();
         newG.addListener(new RunnableClickListener(() -> {
             MainMenuProvider.disableAll(stage.getRoot());
-            GenGalaxyWindow window = new GenGalaxyWindow(Styles.getInstance().windowStyleTranslucent);
-            window.addCloseAction(() -> {
-                MainMenuProvider.enableAll(stage.getRoot());
-            });
-            window.pack();
+            GenGalaxyWindow window = genGalaxyWindow.get();
+            if (window == null) {
+                window = new GenGalaxyWindow(Styles.getInstance().windowStyleTranslucent);
+                window.addCloseAction(() -> {
+                    MainMenuProvider.enableAll(stage.getRoot());
+                });
+                window.pack();
+                genGalaxyWindow.lazySet(window);
+            }
             window.show(stage);
         }));
 

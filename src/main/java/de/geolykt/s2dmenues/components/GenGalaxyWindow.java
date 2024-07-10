@@ -11,8 +11,10 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.jetbrains.annotations.NotNull;
 
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
@@ -25,7 +27,10 @@ import com.badlogic.gdx.utils.Align;
 
 import de.geolykt.s2dmenues.RunnableClickListener;
 import de.geolykt.s2dmenues.Styles;
+import de.geolykt.starloader.api.empire.StarlaneGenerator;
 import de.geolykt.starloader.api.gui.Drawing;
+import de.geolykt.starloader.api.registry.Registry;
+import de.geolykt.starloader.api.registry.RegistryKeys;
 
 import snoddasmannen.galimulator.FractalStarGenerator;
 import snoddasmannen.galimulator.MapData;
@@ -55,9 +60,13 @@ public class GenGalaxyWindow extends Dialog {
     }
 
     @NotNull
+    private StarAdjustmentMethod adjustmentMethod = StarAdjustmentMethod.NORMAL;
+    @NotNull
     private final TextButton closeButton;
     @NotNull
     private final Table contentTableUpper;
+    @NotNull
+    private final TextButton galaxyGenerateButton;
     @NotNull
     private final GalaxyPreviewWidget galaxyPreview;
     private int galaxySize;
@@ -76,9 +85,9 @@ public class GenGalaxyWindow extends Dialog {
     @NotNull
     private final TextButton starAdjustmentsButton;
     @NotNull
-    private final TextButton starlaneGeneratorButton;
+    private StarlaneGenerator starlaneGenerator = Registry.STARLANE_GENERATORS.require(RegistryKeys.GALIMULATOR_STARLANES_STANDARD);
     @NotNull
-    private final TextButton galaxyGenerateButton;
+    private final TextButton starlaneGeneratorButton;
 
     public GenGalaxyWindow(@NotNull WindowStyle style) {
         super("Generate Galaxy", style);
@@ -90,8 +99,8 @@ public class GenGalaxyWindow extends Dialog {
         this.masterSplitPane = new SplitPane(this.contentTableUpper, null, true, Styles.getInstance().splitPaneStyle);
 
         this.galaxyGenerateButton = new RunnableTextButton("Generate Galaxy!", Styles.getInstance().confirmButtonStyle, (button) -> {
-            this.mapdata.setConnectionMethod(ConnectionMethod.STANDARD); // TODO Custom starlane generators
-            this.mapdata.setStarAdjustmentMethod(StarAdjustmentMethod.NORMAL); // TODO Custom adjustment methods
+            this.mapdata.setConnectionMethod((ConnectionMethod) this.starlaneGenerator);
+            this.mapdata.setStarAdjustmentMethod(this.adjustmentMethod);
             this.mapdata.setScenarioSource(ProceduralScenarioSource.CLASSIC); // TODO Allow to set scenario sources
             Space.generateGalaxySync(this.galaxySize, this.mapdata);
             Drawing.setShownStage(null);
@@ -124,7 +133,7 @@ public class GenGalaxyWindow extends Dialog {
                 }
                 textButton.addListener((evt) -> {
                     if (evt instanceof InputEvent && ((InputEvent) evt).getType() == InputEvent.Type.enter) {
-                        GenGalaxyWindow.this.getStage().setScrollFocus(textButton);
+                        GenGalaxyWindow.this.getStage().setScrollFocus(evt.getListenerActor());
                     }
                     return false;
                 });
@@ -157,14 +166,72 @@ public class GenGalaxyWindow extends Dialog {
             }
         });
 
-        this.starAdjustmentsButton = new RunnableTextButton("Adjustments", Styles.getInstance().buttonStyle, (button) -> {
-            // Display modal
+        this.starAdjustmentsButton = new RunnableTextButton("Adjustments [GRAY](" + this.adjustmentMethod.toString() + ")[]", Styles.getInstance().buttonStyle, (starAdjustmentsButton) -> {
+            TreeMap<String, Actor> buttons = new TreeMap<>();
+            AtomicReference<Button> currentlyActiveButton = new AtomicReference<>();
+            for (StarAdjustmentMethod adjustmentMethod : StarAdjustmentMethod.values()) {
+                Button adjustmentButton = new RunnableTextButton(Objects.toString(adjustmentMethod), Styles.getInstance().buttonStyle, (clickedOption) -> {
+                    this.adjustmentMethod = adjustmentMethod;
+                    starAdjustmentsButton.setText("Adjustments [GRAY](" + this.adjustmentMethod.toString() + ")[]");
+                    currentlyActiveButton.get().setDisabled(false);
+                    currentlyActiveButton.lazySet(clickedOption);
+                    clickedOption.setDisabled(true);
+                });
+                adjustmentButton.addListener((evt) -> {
+                    if (evt instanceof InputEvent && ((InputEvent) evt).getType() == InputEvent.Type.enter) {
+                        GenGalaxyWindow.this.getStage().setScrollFocus(evt.getListenerActor());
+                    }
+                    return false;
+                });
+                buttons.put(adjustmentMethod.toString(), adjustmentButton);
+                if (adjustmentMethod == this.adjustmentMethod) {
+                    adjustmentButton.setDisabled(true);
+                    currentlyActiveButton.lazySet(adjustmentButton);
+                }
+            }
+
+            HorizontalGroup buttonGroup = new HorizontalGroup().wrap(true).top().left();
+            buttons.values().forEach(buttonGroup::addActor);
+            this.masterSplitPane.setSecondWidget(new ScrollPane(buttonGroup, Styles.getInstance().scrollPaneStyle));
+            if (this.masterSplitPane.getSplitAmount() > 0.8F) {
+                this.masterSplitPane.setSplitAmount(0.8F);
+            }
         });
-        this.starlaneGeneratorButton = new RunnableTextButton("Starlane generation", Styles.getInstance().buttonStyle, (button) -> {
-            // Display modal
+
+        this.starlaneGeneratorButton = new RunnableTextButton("Starlanes [GRAY](" + this.starlaneGenerator.getDisplayName() + ")[]", Styles.getInstance().buttonStyle, (starlaneGenButton) -> {
+            TreeMap<String, Actor> buttons = new TreeMap<>();
+            AtomicReference<Button> currentlyActiveButton = new AtomicReference<>();
+            for (StarlaneGenerator generator : Registry.STARLANE_GENERATORS.getValues()) {
+                Button generatorButton = new RunnableTextButton(generator.getDisplayName(), Styles.getInstance().buttonStyle, (clickedOption) -> {
+                    this.starlaneGenerator = generator;
+                    starlaneGenButton.setText("Starlanes [GRAY](" + this.starlaneGenerator.getDisplayName() + ")[]");
+                    currentlyActiveButton.get().setDisabled(false);
+                    currentlyActiveButton.lazySet(clickedOption);
+                    clickedOption.setDisabled(true);
+                });
+                generatorButton.addListener((evt) -> {
+                    if (evt instanceof InputEvent && ((InputEvent) evt).getType() == InputEvent.Type.enter) {
+                        GenGalaxyWindow.this.getStage().setScrollFocus(evt.getListenerActor());
+                    }
+                    return false;
+                });
+                buttons.put(generator.getDisplayName(), generatorButton);
+                if (generator == this.starlaneGenerator) {
+                    generatorButton.setDisabled(true);
+                    currentlyActiveButton.lazySet(generatorButton);
+                }
+            }
+
+            HorizontalGroup buttonGroup = new HorizontalGroup().wrap(true).top().left();
+            buttons.values().forEach(buttonGroup::addActor);
+            this.masterSplitPane.setSecondWidget(new ScrollPane(buttonGroup, Styles.getInstance().scrollPaneStyle));
+            if (this.masterSplitPane.getSplitAmount() > 0.8F) {
+                this.masterSplitPane.setSplitAmount(0.8F);
+            }
         });
+
         this.scenarioButton = new RunnableTextButton("Scenario", Styles.getInstance().buttonStyle, (button) -> {
-            // Display modal
+            // TODO Display modal
         });
         this.closeButton = new RunnableTextButton("Close", Styles.getInstance().cancelButtonStyle, (button) -> {
             GenGalaxyWindow.this.hide();
