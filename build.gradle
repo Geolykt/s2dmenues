@@ -1,18 +1,20 @@
 plugins {
     id 'java'
     id 'java-library'
-    //id 'gsl-starplane' version '0.1.0'
+    id 'maven-publish'
     id 'gsl-starplane' version '0.2.0-a20240711'
 }
 
 group 'de.geolykt'
-def archivesBaseName = 's2dmenues'
 // Hint: The version is defined in the gradle.properties file!
+
+base {
+    archivesName = 's2dmenues'
+}
 
 targetCompatibility = compileJava.targetCompatibility = sourceCompatibility = compileJava.sourceCompatibility = '1.8'
 
 repositories {
-    mavenLocal()
     maven {
         name 'stianloader-maven'
         url 'https://stianloader.org/maven'
@@ -22,6 +24,7 @@ repositories {
         url 'https://jitpack.io'
     }
     mavenCentral()
+    mavenLocal()
 }
 
 starplane {
@@ -78,4 +81,30 @@ remapJar {
 
 build {
     dependsOn remapJar
+}
+
+publish {
+    dependsOn publishToMavenLocal // Gradle doesn't quite like this line but otherwise I get issues when publishing so what gives?
+}
+
+publishing {
+    publications {
+        plugin(MavenPublication) { publication ->
+            groupId project.group
+            artifactId project.base.archivesName.get()
+
+            from components['java']
+            artifact remapJar
+        }
+    }
+    repositories {
+        if (System.getProperty('publishRepo') != null) {
+            maven {
+                url System.getProperty('publishRepo')
+                allowInsecureProtocol = true
+            }
+        } else {
+            mavenLocal()
+        }
+    }
 }
