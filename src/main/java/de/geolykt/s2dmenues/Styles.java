@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
@@ -34,6 +35,8 @@ public class Styles implements Disposable {
     public final TextButtonStyle cancelButtonStyle;
     @NotNull
     public final TextButtonStyle confirmButtonStyle;
+    @NotNull
+    public final LabelStyle labelStyleGeneric;
     @NotNull
     public final WindowStyle windowStyleTranslucent;
     @NotNull
@@ -107,6 +110,11 @@ public class Styles implements Disposable {
         this.textFieldStyle.font = Drawing.getSpaceFont();
         this.textFieldStyle.fontColor = Color.WHITE;
         this.textFieldStyle.background = TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(Color.LIGHT_GRAY), 0.66F);
+        this.textFieldStyle.background.setLeftWidth(10F);
+        this.textFieldStyle.cursor = new TextureRegionDrawable(Drawing.getTextureProvider().getSinglePixelSquare()).tint(Color.BLACK);
+        this.textFieldStyle.cursor.setMinWidth(3F);
+
+        this.labelStyleGeneric = new LabelStyle(Drawing.getSpaceFont(), Color.WHITE);
     }
 
     public void dispose() {

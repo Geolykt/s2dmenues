@@ -17,6 +17,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.SplitPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -108,8 +109,32 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
         });
         this.galaxySizeButton = new RunnableTextButton("", Styles.getInstance().buttonStyle, (button) -> {
             // Display modal
+            Dialog dialog = new Dialog("Set galaxy size", Styles.getInstance().windowStylePlastic);
+            TextField galaxySizeField = new TextField("", Styles.getInstance().textFieldStyle);
+            Button dialogCancel = new RunnableTextButton("Cancel", Styles.getInstance().cancelButtonStyle, (Runnable) dialog::hide);
+            Stage stage = this.getStage();
+            Button dialogConfirm = new RunnableTextButton("Confirm", Styles.getInstance().confirmButtonStyle, () -> {
+                dialog.hide();
+                String text = galaxySizeField.getText();
+                try {
+                    if (!text.isEmpty()) {
+                        this.setGalaxySize(Integer.parseUnsignedInt(text));
+                    }
+                } catch (NumberFormatException nfe) {
+                    Dialog noticeDialog = new Dialog("Error", Styles.getInstance().windowStyleTranslucent);
+                    Button cancelNoticeButton = new RunnableTextButton("Ok", Styles.getInstance().cancelButtonStyle, (Runnable) noticeDialog::hide);
+                    noticeDialog.getContentTable().add(new Label("Not a valid number: '" + text + "'", Styles.getInstance().labelStyleGeneric)).pad(10);
+                    noticeDialog.getButtonTable().add(cancelNoticeButton).pad(5);
+                    noticeDialog.show(stage);
+                }
+            });
+            dialog.getContentTable().add(galaxySizeField).pad(10).padTop(40).growX();
+            dialog.getButtonTable().add(dialogConfirm).pad(5);
+            dialog.getButtonTable().add(dialogCancel).pad(5);
+
+            dialog.show(stage);
+            stage.setKeyboardFocus(galaxySizeField);
         });
-        this.setGalaxySize(5_000);
         this.galaxyTypeButton = new RunnableTextButton("Galaxy type", Styles.getInstance().buttonStyle, () -> {
             // Display modal
             Collection<MapData> maps = Space.getSelectableMaps();
@@ -260,6 +285,7 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
 
         // Ensure everything is updated (e.g. settings dialogs, etc.)
         this.setMapData(this.mapdata);
+        this.setGalaxySize(5_000);
     }
 
     @NotNull
@@ -339,9 +365,7 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             TextButton setSeedButton = new RunnableTextButton("Set seed [GRAY](" + fsg.seedString + ")[]", Styles.getInstance().buttonStyle, (setSeedClickedButton) -> {
                 Dialog setSeedDialog = new Dialog("Set fractal seed", Styles.getInstance().windowStylePlastic);
                 TextField seedInputField = new TextField(fsg.seedString, Styles.getInstance().textFieldStyle);
-                TextButton dialogCancel = new RunnableTextButton("Cancel", Styles.getInstance().cancelButtonStyle, () -> {
-                    setSeedDialog.hide();
-                });
+                TextButton dialogCancel = new RunnableTextButton("Cancel", Styles.getInstance().cancelButtonStyle, (Runnable) setSeedDialog::hide);
                 TextButton dialogConfirm = new RunnableTextButton("Confirm", Styles.getInstance().confirmButtonStyle, () -> {
                     setSeedDialog.hide();
                     fsg.seedString = seedInputField.getText();
@@ -349,12 +373,13 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
                     fsg.generateMap();
                     setSeedClickedButton.setText("Set seed [GRAY](" + fsg.seedString + ")[]");
                 });
-                setSeedDialog.getContentTable().add(seedInputField).pad(10).growX();
-                setSeedDialog.getButtonTable().add(dialogCancel).pad(5);
+                setSeedDialog.getContentTable().add(seedInputField).pad(10).padTop(40).growX();
                 setSeedDialog.getButtonTable().add(dialogConfirm).pad(5);
+                setSeedDialog.getButtonTable().add(dialogCancel).pad(5);
 
                 Stage stage = this.getStage();
                 setSeedDialog.show(stage);
+                stage.setKeyboardFocus(seedInputField);
             });
 
             TextButton drawLandButton = new RunnableTextButton("Draw land [GRAY](" + fsg.drawLand + ")[]", Styles.getInstance().buttonStyle, (clickedButton) -> {
@@ -378,6 +403,7 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
     public GenGalaxyWindow setGalaxySize(int size) {
         this.galaxySize = size;
         this.galaxySizeButton.setText("Galaxy size: [GRAY]" + this.galaxySize + "[]");
+        this.galaxyPreview.reset();
         return this;
     }
 
