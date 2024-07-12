@@ -110,7 +110,7 @@ public class MainMenuProvider {
             backgroundDrawable = new CroppingTextureDrawable(backgroundTexture, true);
         };
 
-        Stage stage = new MainMenuStage(backgroundDrawable, true);
+        MainMenuStage stage = new MainMenuStage(backgroundDrawable, true);
         VerticalGroup buttons = new VerticalGroup();
 
         TextButton exit = new TextButton("Exit game", Styles.getInstance().buttonStyle);
@@ -138,6 +138,7 @@ public class MainMenuProvider {
                 });
                 window.pack();
                 genGalaxyWindow.lazySet(window);
+                stage.addCleanupHandler(window::dispose);
             }
             window.show(stage);
         }));

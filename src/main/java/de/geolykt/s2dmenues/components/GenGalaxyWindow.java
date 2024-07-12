@@ -24,6 +24,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Disposable;
 
 import de.geolykt.s2dmenues.RunnableClickListener;
 import de.geolykt.s2dmenues.Styles;
@@ -41,7 +42,7 @@ import snoddasmannen.galimulator.Space.ConnectionMethod;
 import snoddasmannen.galimulator.Space.StarAdjustmentMethod;
 import snoddasmannen.galimulator.StarGenerator;
 
-public class GenGalaxyWindow extends Dialog {
+public class GenGalaxyWindow extends Dialog implements Disposable {
 
     @NotNull
     private static String getCategoryName(@NotNull MapData map) {
@@ -265,6 +266,11 @@ public class GenGalaxyWindow extends Dialog {
     public GenGalaxyWindow addCloseAction(@NotNull Runnable action) {
         this.closeButton.addListener(new RunnableClickListener(action));
         return this;
+    }
+
+    @Override
+    public void dispose() {
+        this.galaxyPreview.dispose();
     }
 
     public int getGalaxySize() {

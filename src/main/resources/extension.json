@@ -1,7 +1,7 @@
 {
     "entrypoint": "de.geolykt.s2dmenues.S2DMenues",
     "name": "S2DMenues",
-    "version": "0.0.1-SNAPSHOT",
+    "version": "${version}",
     "dependencies": [ "StarloaderAPI" ],
     "codeModifiers": [ ],
     "reversibleAccessSetter": "s2dmenues.ras",
@@ -29,7 +29,7 @@
             {
                 "group": "com.github.raeleus.TenPatch",
                 "artifact": "tenpatch",
-                "version": "5.2.3",
+                "version": "${tenpatchVersion}",
                 "exclusions": [
                     "com.badlogicgames.gdx:gdx"
                 ]
