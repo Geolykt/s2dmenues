@@ -24,13 +24,14 @@ import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.SplitPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Disposable;
 
+import de.geolykt.s2dmenues.ReflectionHacks;
 import de.geolykt.s2dmenues.RunnableClickListener;
 import de.geolykt.s2dmenues.Styles;
+import de.geolykt.s2dmenues.UIUtil;
 import de.geolykt.starloader.api.empire.StarlaneGenerator;
 import de.geolykt.starloader.api.gui.Drawing;
 import de.geolykt.starloader.api.registry.Registry;
@@ -113,34 +114,7 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             Space.generateGalaxySync(this.galaxySize, this.mapdata);
             Drawing.setShownStage(null);
         });
-        this.galaxySizeButton = new RunnableTextButton("", Styles.getInstance().buttonStyle, (button) -> {
-            // Display modal
-            Dialog dialog = new Dialog("Set galaxy size", Styles.getInstance().windowStylePlastic);
-            TextField galaxySizeField = new TextField("", Styles.getInstance().textFieldStyle);
-            Button dialogCancel = new RunnableTextButton("Cancel", Styles.getInstance().cancelButtonStyle, (Runnable) dialog::hide);
-            Stage stage = this.getStage();
-            Button dialogConfirm = new RunnableTextButton("Confirm", Styles.getInstance().confirmButtonStyle, () -> {
-                dialog.hide();
-                String text = galaxySizeField.getText();
-                try {
-                    if (!text.isEmpty()) {
-                        this.setGalaxySize(Integer.parseUnsignedInt(text));
-                    }
-                } catch (NumberFormatException nfe) {
-                    Dialog noticeDialog = new Dialog("Error", Styles.getInstance().windowStyleTranslucent);
-                    Button cancelNoticeButton = new RunnableTextButton("Ok", Styles.getInstance().cancelButtonStyle, (Runnable) noticeDialog::hide);
-                    noticeDialog.getContentTable().add(new Label("Not a valid number: '" + text + "'", Styles.getInstance().labelStyleGeneric)).pad(10);
-                    noticeDialog.getButtonTable().add(cancelNoticeButton).pad(5);
-                    noticeDialog.show(stage);
-                }
-            });
-            dialog.getContentTable().add(galaxySizeField).pad(10).padTop(40).growX();
-            dialog.getButtonTable().add(dialogConfirm).pad(5);
-            dialog.getButtonTable().add(dialogCancel).pad(5);
-
-            dialog.show(stage);
-            stage.setKeyboardFocus(galaxySizeField);
-        });
+        this.galaxySizeButton = UIUtil.createUnsignedIntInputButton("Star count", this::getGalaxySize, this::setGalaxySize);
         this.galaxyTypeButton = new RunnableTextButton("Galaxy type", Styles.getInstance().buttonStyle, () -> {
             // Display modal
             Collection<MapData> maps = Space.getSelectableMaps();
@@ -156,10 +130,10 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
                     this.setMapData(map);
                     currentSelectedMapMode.get().setDisabled(false);
                     mapButton.setDisabled(true);
-                    currentSelectedMapMode.lazySet(mapButton);
+                    currentSelectedMapMode.set(mapButton);
                 });
                 if (map.getGenerator() == this.mapdata.getGenerator()) {
-                    currentSelectedMapMode.lazySet(textButton);
+                    currentSelectedMapMode.set(textButton);
                     textButton.setDisabled(true);
                     this.setMapData(map);
                 }
@@ -408,24 +382,10 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             optionTable.add(aspectRatioHeader).left().growX().row();
             optionTable.add(aspectRatioGroup).growX().row();
 
-            TextButton setSeedButton = new RunnableTextButton("Set seed [GRAY](" + fsg.seedString + ")[]", Styles.getInstance().buttonStyle, (setSeedClickedButton) -> {
-                Dialog setSeedDialog = new Dialog("Set fractal seed", Styles.getInstance().windowStylePlastic);
-                TextField seedInputField = new TextField(fsg.seedString, Styles.getInstance().textFieldStyle);
-                TextButton dialogCancel = new RunnableTextButton("Cancel", Styles.getInstance().cancelButtonStyle, (Runnable) setSeedDialog::hide);
-                TextButton dialogConfirm = new RunnableTextButton("Confirm", Styles.getInstance().confirmButtonStyle, () -> {
-                    setSeedDialog.hide();
-                    fsg.seedString = seedInputField.getText();
-                    this.galaxyPreview.reset();
-                    fsg.generateMap();
-                    setSeedClickedButton.setText("Set seed [GRAY](" + fsg.seedString + ")[]");
-                });
-                setSeedDialog.getContentTable().add(seedInputField).pad(10).padTop(40).growX();
-                setSeedDialog.getButtonTable().add(dialogConfirm).pad(5);
-                setSeedDialog.getButtonTable().add(dialogCancel).pad(5);
-
-                Stage stage = this.getStage();
-                setSeedDialog.show(stage);
-                stage.setKeyboardFocus(seedInputField);
+            TextButton setSeedButton = UIUtil.createTextInputButton("Set seed", () -> Objects.toString(fsg.seedString), seed -> {
+                fsg.seedString = seed;
+                this.galaxyPreview.reset();
+                fsg.generateMap();
             });
 
             TextButton drawLandButton = new RunnableTextButton("Draw land [GRAY](" + fsg.drawLand + ")[]", Styles.getInstance().buttonStyle, (clickedButton) -> {
@@ -442,6 +402,23 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             ScrollPane scrollPane = new ScrollPane(optionTable, Styles.getInstance().scrollPaneStyle);
             this.masterSplitPane.setSecondWidget(scrollPane);
             this.getStage().setScrollFocus(optionTable);
+        } else if (generator == ProceduralStarGenerator.MOVING_PLANETS) {
+            TextButton setPlanetCountButton = UIUtil.createUnsignedIntInputButton("Set planet count", ReflectionHacks::getPlanetaryStarGeneratorPlanetCount, (planetCount) -> {
+                if (planetCount <= 0) {
+                    planetCount = 1;
+                }
+                if (!ReflectionHacks.setPlanetaryStarGeneratorPlanetCount(planetCount)) {
+                    Dialog noticeDialog = new Dialog("Error", Styles.getInstance().windowStyleTranslucent);
+                    Button cancelNoticeButton = new RunnableTextButton("Ok", Styles.getInstance().cancelButtonStyle, (Runnable) noticeDialog::hide);
+                    noticeDialog.getContentTable().add(new Label("A reflective error occured. Please take a look at the logs. Sorry!", Styles.getInstance().labelStyleGeneric)).pad(10);
+                    noticeDialog.getButtonTable().add(cancelNoticeButton).pad(5);
+                    noticeDialog.show(this.getStage());
+                } else {
+                    this.galaxyPreview.reset();
+                }
+            });
+            this.masterSplitPane.setSecondWidget(setPlanetCountButton);
+            this.masterSplitPane.setSplitAmount(0.9F);
         }
     }
 
@@ -456,7 +433,9 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
     public void setMapData(@NotNull MapData map) {
         this.mapdata = map;
 
-        if (map.getGenerator() instanceof FractalStarGenerator) {
+        StarGenerator generator = map.getGenerator();
+        if (generator instanceof FractalStarGenerator
+                || generator == ProceduralStarGenerator.MOVING_PLANETS) {
             this.openGeneratorOptionsButton.setVisible(true);
         } else {
             this.openGeneratorOptionsButton.setVisible(false);

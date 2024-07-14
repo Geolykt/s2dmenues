@@ -38,15 +38,15 @@ public class Styles implements Disposable {
     @NotNull
     public final LabelStyle labelStyleGeneric;
     @NotNull
-    public final WindowStyle windowStyleTranslucent;
-    @NotNull
-    public final WindowStyle windowStylePlastic;
+    public final ScrollPaneStyle scrollPaneStyle;
     @NotNull
     public final SplitPaneStyle splitPaneStyle;
     @NotNull
-    public final ScrollPaneStyle scrollPaneStyle;
-    @NotNull
     public final TextFieldStyle textFieldStyle;
+    @NotNull
+    public final WindowStyle windowStylePlastic;
+    @NotNull
+    public final WindowStyle windowStyleTranslucent;
 
     private Styles() {
         this.buttonStyle = new TextButtonStyle();
