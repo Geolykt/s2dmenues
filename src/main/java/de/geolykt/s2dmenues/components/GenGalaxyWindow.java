@@ -1,6 +1,8 @@
 package de.geolykt.s2dmenues.components;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Objects;
@@ -38,6 +40,8 @@ import snoddasmannen.galimulator.FractalStarGenerator;
 import snoddasmannen.galimulator.MapData;
 import snoddasmannen.galimulator.ProceduralScenarioSource;
 import snoddasmannen.galimulator.ProceduralStarGenerator;
+import snoddasmannen.galimulator.Scenario;
+import snoddasmannen.galimulator.ScenarioSource;
 import snoddasmannen.galimulator.Space;
 import snoddasmannen.galimulator.Space.ConnectionMethod;
 import snoddasmannen.galimulator.Space.StarAdjustmentMethod;
@@ -67,6 +71,8 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
     private final TextButton closeButton;
     @NotNull
     private final Table contentTableUpper;
+    @NotNull
+    private ScenarioSource currentScenarioSource = ProceduralScenarioSource.CLASSIC;
     @NotNull
     private final TextButton galaxyGenerateButton;
     @NotNull
@@ -103,7 +109,7 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
         this.galaxyGenerateButton = new RunnableTextButton("Generate Galaxy!", Styles.getInstance().confirmButtonStyle, (button) -> {
             this.mapdata.setConnectionMethod((ConnectionMethod) this.starlaneGenerator);
             this.mapdata.setStarAdjustmentMethod(this.adjustmentMethod);
-            this.mapdata.setScenarioSource(ProceduralScenarioSource.CLASSIC); // TODO Allow to set scenario sources
+            this.mapdata.setScenarioSource(this.currentScenarioSource);
             Space.generateGalaxySync(this.galaxySize, this.mapdata);
             Drawing.setShownStage(null);
         });
@@ -256,8 +262,42 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             }
         });
 
-        this.scenarioButton = new RunnableTextButton("Scenario", Styles.getInstance().buttonStyle, (button) -> {
-            // TODO Display modal
+        this.scenarioButton = new RunnableTextButton("Scenario [GRAY](" + this.currentScenarioSource.getName() + ")[]", Styles.getInstance().buttonStyle, (scenarioSourceButton) -> {
+            TreeMap<String, Actor> buttons = new TreeMap<>();
+            AtomicReference<Button> currentlyActiveButton = new AtomicReference<>();
+            List<Object> scenarios = new ArrayList<>();
+            scenarios.addAll(Scenario.loadScenarios());
+            for (ScenarioSource scenario : ProceduralScenarioSource.values()) {
+                scenarios.add(scenario);
+            }
+            for (Object scenario : scenarios) {
+                ScenarioSource scenarioSource = (ScenarioSource) scenario;
+                Button scenarioButton = new RunnableTextButton(Objects.requireNonNull(scenarioSource.getName()), Styles.getInstance().buttonStyle, (clickedOption) -> {
+                    this.currentScenarioSource = scenarioSource;
+                    scenarioSourceButton.setText("Scenario [GRAY](" + this.currentScenarioSource.getName() + ")[]");
+                    currentlyActiveButton.get().setDisabled(false);
+                    currentlyActiveButton.lazySet(clickedOption);
+                    clickedOption.setDisabled(true);
+                });
+                scenarioButton.addListener((evt) -> {
+                    if (evt instanceof InputEvent && ((InputEvent) evt).getType() == InputEvent.Type.enter) {
+                        GenGalaxyWindow.this.getStage().setScrollFocus(evt.getListenerActor());
+                    }
+                    return false;
+                });
+                buttons.put(scenarioSource.getName(), scenarioButton);
+                if (scenarioSource == this.currentScenarioSource) {
+                    scenarioButton.setDisabled(true);
+                    currentlyActiveButton.lazySet(scenarioButton);
+                }
+            }
+
+            HorizontalGroup buttonGroup = new HorizontalGroup().wrap(true).top().left();
+            buttons.values().forEach(buttonGroup::addActor);
+            this.masterSplitPane.setSecondWidget(new ScrollPane(buttonGroup, Styles.getInstance().scrollPaneStyle));
+            if (this.masterSplitPane.getSplitAmount() > 0.8F) {
+                this.masterSplitPane.setSplitAmount(0.8F);
+            }
         });
         this.closeButton = new RunnableTextButton("Close", Styles.getInstance().cancelButtonStyle, (button) -> {
             GenGalaxyWindow.this.hide();
