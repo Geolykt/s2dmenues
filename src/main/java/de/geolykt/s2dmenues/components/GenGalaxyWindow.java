@@ -158,7 +158,7 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
                     mapButton.setDisabled(true);
                     currentSelectedMapMode.lazySet(mapButton);
                 });
-                if (map.getGenerator() == ProceduralStarGenerator.STRETCHED_SPIRAL) {
+                if (map.getGenerator() == this.mapdata.getGenerator()) {
                     currentSelectedMapMode.lazySet(textButton);
                     textButton.setDisabled(true);
                     this.setMapData(map);
@@ -361,19 +361,25 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             });
 
             HorizontalGroup fractalAlgoOptions = new HorizontalGroup().wrap(true);
-            TextButton[] algorithmButtons = new TextButton[FractalStarGenerator.LandGenerator.values().length];
+            Button[] algorithmButtons = new TextButton[FractalStarGenerator.LandGenerator.values().length];
+            AtomicReference<Button> currentActiveButton = new AtomicReference<>();
             for (FractalStarGenerator.LandGenerator algo : FractalStarGenerator.LandGenerator.values()) {
-                algorithmButtons[algo.ordinal()] = new RunnableTextButton(Objects.toString(algo), Styles.getInstance().buttonStyle, (clickedButton) -> {
-                    // TODO the currently selected algorithm is lost - perhaps we could introduce some way of recovering it?
-                    for (TextButton button : algorithmButtons) {
+                Button algorithmButton = new RunnableTextButton(Objects.toString(algo), Styles.getInstance().buttonStyle, (clickedButton) -> {
+                    for (Button button : algorithmButtons) {
                         button.setDisabled(false);
                     }
                     clickedButton.setDisabled(true);
                     algo.a(fsg);
+                    fsg.a(algo);
                     this.galaxyPreview.reset();
                 });
+                if (algo == fsg.landGenerator) {
+                    currentActiveButton.set(algorithmButton);
+                    algorithmButton.setDisabled(true);
+                }
+                algorithmButtons[algo.ordinal()] = algorithmButton;
             }
-            for (TextButton button : algorithmButtons) {
+            for (Actor button : algorithmButtons) {
                 fractalAlgoOptions.addActor(button);
             }
             optionTable.add(fractalAlgoHeader).left().growX().row();
