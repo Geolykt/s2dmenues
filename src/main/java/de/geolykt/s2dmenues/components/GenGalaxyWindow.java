@@ -32,6 +32,7 @@ import de.geolykt.s2dmenues.ReflectionHacks;
 import de.geolykt.s2dmenues.RunnableClickListener;
 import de.geolykt.s2dmenues.Styles;
 import de.geolykt.s2dmenues.UIUtil;
+import de.geolykt.s2dmenues.VelocityMovingStarGenerator;
 import de.geolykt.starloader.api.empire.StarlaneGenerator;
 import de.geolykt.starloader.api.gui.Drawing;
 import de.geolykt.starloader.api.registry.Registry;
@@ -402,6 +403,14 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             ScrollPane scrollPane = new ScrollPane(optionTable, Styles.getInstance().scrollPaneStyle);
             this.masterSplitPane.setSecondWidget(scrollPane);
             this.getStage().setScrollFocus(optionTable);
+        } else if (generator instanceof VelocityMovingStarGenerator) {
+            VelocityMovingStarGenerator vmg = (VelocityMovingStarGenerator) generator;
+            TextButton setSpeedButton = UIUtil.createFloatInputButton("Set rotation speed", vmg::s2dmenues$getVelocity, (velocity) -> {
+                vmg.s2dmenues$setVelocity(velocity);
+                this.galaxyPreview.reset();
+            });
+            this.masterSplitPane.setSecondWidget(setSpeedButton);
+            this.masterSplitPane.setSplitAmount(0.9F);
         } else if (generator == ProceduralStarGenerator.MOVING_PLANETS) {
             TextButton setPlanetCountButton = UIUtil.createUnsignedIntInputButton("Set planet count", ReflectionHacks::getPlanetaryStarGeneratorPlanetCount, (planetCount) -> {
                 if (planetCount <= 0) {
@@ -435,6 +444,7 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
 
         StarGenerator generator = map.getGenerator();
         if (generator instanceof FractalStarGenerator
+                || generator instanceof VelocityMovingStarGenerator
                 || generator == ProceduralStarGenerator.MOVING_PLANETS) {
             this.openGeneratorOptionsButton.setVisible(true);
         } else {

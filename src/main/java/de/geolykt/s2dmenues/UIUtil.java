@@ -1,12 +1,12 @@
 package de.geolykt.s2dmenues;
 
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 import org.jetbrains.annotations.NotNull;
-import org.stianloader.micromixin.transform.internal.util.Objects;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -17,8 +17,14 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 
 import de.geolykt.s2dmenues.components.RunnableTextButton;
+import de.geolykt.starloader.api.utils.FloatConsumer;
 
 public class UIUtil {
+
+    @FunctionalInterface
+    public static interface FloatSupplier {
+        public float getAsFloat();
+    }
 
     @NotNull
     public static TextButton createTextInputButton(@NotNull String description, @NotNull Supplier<@NotNull String> currentValueSupplier, @NotNull Consumer<@NotNull String> currentValueSetter) {
@@ -27,6 +33,16 @@ public class UIUtil {
                 currentValueSetter.accept(value);
                 textButton.setText(description + " [GRAY](" + currentValueSupplier.get() + ")[]");
             }, currentValueSupplier.get());
+        });
+    }
+
+    @NotNull
+    public static TextButton createFloatInputButton(@NotNull String description, @NotNull FloatSupplier currentValueSupplier, @NotNull FloatConsumer currentValueSetter) {
+        return new RunnableTextButton(description + " [GRAY](" + currentValueSupplier.getAsFloat() + ")[]", Styles.getInstance().buttonStyle, (textButton) -> {
+            UIUtil.showInputDialogFloat(Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), value -> {
+                currentValueSetter.accept(value);
+                textButton.setText(description + " [GRAY](" + currentValueSupplier.getAsFloat() + ")[]");
+            });
         });
     }
 
@@ -65,6 +81,22 @@ public class UIUtil {
             try {
                 if (!text.isEmpty()) { // Make no text be like no operation
                     onAccept.accept(Integer.parseUnsignedInt(text));
+                }
+            } catch (NumberFormatException nfe) {
+                Dialog noticeDialog = new Dialog("Error", Styles.getInstance().windowStyleTranslucent);
+                Button cancelNoticeButton = new RunnableTextButton("Ok", Styles.getInstance().cancelButtonStyle, (Runnable) noticeDialog::hide);
+                noticeDialog.getContentTable().add(new Label("Not a valid number: '" + text + "'", Styles.getInstance().labelStyleGeneric)).pad(10);
+                noticeDialog.getButtonTable().add(cancelNoticeButton).pad(5);
+                noticeDialog.show(stage);
+            }
+        });
+    }
+
+    public static void showInputDialogFloat(@NotNull Stage stage, @NotNull FloatConsumer onAccept) {
+        UIUtil.showInputDialog(stage, (text) -> {
+            try {
+                if (!text.isEmpty()) { // Make no text be like no operation
+                    onAccept.accept(Float.parseFloat(text));
                 }
             } catch (NumberFormatException nfe) {
                 Dialog noticeDialog = new Dialog("Error", Styles.getInstance().windowStyleTranslucent);

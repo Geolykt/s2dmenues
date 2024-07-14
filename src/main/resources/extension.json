@@ -5,6 +5,7 @@
     "dependencies": [ "StarloaderAPI" ],
     "codeModifiers": [ ],
     "reversibleAccessSetter": "s2dmenues.ras",
+    "mixinConfig": "s2dmenues.mixins.json",
     "externalDependencies" : {
         "repositories" : [
             {

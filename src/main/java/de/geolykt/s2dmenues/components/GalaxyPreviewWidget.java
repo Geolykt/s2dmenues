@@ -181,7 +181,7 @@ public class GalaxyPreviewWidget extends Widget implements Disposable {
         Gdx.gl20.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         GLScissorState scissor = GLScissorState.captureScissor();
         Gdx.gl20.glEnable(GL20.GL_SCISSOR_TEST);
-        boolean clip = this.clipBegin(this.getX() + 8, this.getY() + 8, this.getWidth() - 16, this.getHeight() - 16);
+        boolean clip = this.clipBegin(this.getX() + 2, this.getY() + 2, this.getWidth() - 4, this.getHeight() - 4);
 
         float[] vertices = this.vertices;
         Mesh mesh = this.starDrawingMesh;
