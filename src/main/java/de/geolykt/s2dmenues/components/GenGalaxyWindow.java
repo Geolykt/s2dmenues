@@ -28,11 +28,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Disposable;
 
-import de.geolykt.s2dmenues.ReflectionHacks;
 import de.geolykt.s2dmenues.RunnableClickListener;
 import de.geolykt.s2dmenues.Styles;
 import de.geolykt.s2dmenues.UIUtil;
-import de.geolykt.s2dmenues.VelocityMovingStarGenerator;
+import de.geolykt.s2dmenues.bridge.MovingSpiralStarGenerator;
+import de.geolykt.s2dmenues.bridge.ReflectionHacks;
+import de.geolykt.s2dmenues.bridge.VelocityMovingStarGenerator;
 import de.geolykt.starloader.api.empire.StarlaneGenerator;
 import de.geolykt.starloader.api.gui.Drawing;
 import de.geolykt.starloader.api.registry.Registry;
@@ -428,6 +429,43 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             });
             this.masterSplitPane.setSecondWidget(setPlanetCountButton);
             this.masterSplitPane.setSplitAmount(0.9F);
+        } else if (generator == ProceduralStarGenerator.MOVING_SPIRAL) {
+            MovingSpiralStarGenerator movingSpiralGenerator = (MovingSpiralStarGenerator) generator;
+
+            Table table = new Table();
+
+            table.add(UIUtil.createFloatInputButton("Set core size", movingSpiralGenerator::s2dmenues$getCoreSize, (value) -> {
+                movingSpiralGenerator.s2dmenues$setCoreSize(value);
+                this.galaxyPreview.reset();
+            })).left().growX();
+
+            table.row();
+
+            table.add(UIUtil.createFloatInputButton("Set orbital fudge", movingSpiralGenerator::s2dmenues$getOrbitalFudge, (value) -> {
+                movingSpiralGenerator.s2dmenues$setOrbitalFudge(value);
+                this.galaxyPreview.reset();
+            })).left().growX();
+
+            table.row();
+
+            table.add(UIUtil.createFloatInputButton("Set rotation speed", movingSpiralGenerator::s2dmenues$getSpeed, (value) -> {
+                movingSpiralGenerator.s2dmenues$setSpeed(value);
+                this.galaxyPreview.reset();
+            })).left().growX();
+
+            table.row();
+
+            table.add(UIUtil.createFloatInputButton("Set undulation", movingSpiralGenerator::s2dmenues$getUndulation, (value) -> {
+                movingSpiralGenerator.s2dmenues$setUndulation(value);
+                this.galaxyPreview.reset();
+            })).left().growX();
+
+            table.row();
+
+            ScrollPane scrollPAne = new ScrollPane(table, Styles.getInstance().scrollPaneStyle);
+            this.masterSplitPane.setSecondWidget(scrollPAne);
+            this.masterSplitPane.setSplitAmount(0.73F);
+            this.getStage().setScrollFocus(table);
         }
     }
 
@@ -445,6 +483,7 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
         StarGenerator generator = map.getGenerator();
         if (generator instanceof FractalStarGenerator
                 || generator instanceof VelocityMovingStarGenerator
+                || generator == ProceduralStarGenerator.MOVING_SPIRAL
                 || generator == ProceduralStarGenerator.MOVING_PLANETS) {
             this.openGeneratorOptionsButton.setVisible(true);
         } else {

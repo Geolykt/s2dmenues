@@ -1,4 +1,4 @@
-package de.geolykt.s2dmenues;
+package de.geolykt.s2dmenues.bridge;
 
 public interface VelocityMovingStarGenerator {
     float s2dmenues$getVelocity();

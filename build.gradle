@@ -2,7 +2,7 @@ plugins {
     id 'java'
     id 'java-library'
     id 'maven-publish'
-    id 'gsl-starplane' version '0.2.0-a20240711'
+    id 'gsl-starplane' version '0.2.0-a20240713.1'
 }
 
 group 'de.geolykt'
@@ -53,9 +53,9 @@ deployMods {
 }
 
 dependencies {
-    dependencyMods("de.geolykt:starloader-api:2.0.0-a20240629:remapped")
-    devRuntime "org.stianloader:launcher-micromixin:4.0.0-a20240711"
-    compileOnly "org.stianloader:micromixin-annotations:0.6.1-a20240703"
+    dependencyMods("de.geolykt:starloader-api:2.0.0-a20240713:remapped")
+    devRuntime "org.stianloader:launcher-micromixin:4.0.0-a20240713"
+    compileOnly "org.stianloader:micromixin-annotations:0.6.1-a20240713"
     compileOnly "de.geolykt.starloader:starplane-annotations:1.0.0"
     compileOnlyApi "org.jetbrains:annotations:24.1.0"
 

@@ -4,7 +4,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
-import de.geolykt.s2dmenues.VelocityMovingStarGenerator;
+import de.geolykt.s2dmenues.bridge.VelocityMovingStarGenerator;
 
 @Mixin(targets = "snoddasmannen/galimulator/ProceduralStarGenerator$23")
 public class PSGMovingFrameMixins implements VelocityMovingStarGenerator {
