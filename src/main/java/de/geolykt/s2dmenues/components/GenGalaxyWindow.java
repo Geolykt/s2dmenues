@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.LoggerFactory;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -56,14 +57,27 @@ import snoddasmannen.galimulator.StarGenerator;
 
 public class GenGalaxyWindow extends Dialog implements Disposable {
 
+    private static enum SubDialog {
+        ADJUSTMENT_METHODS,
+        GALAXY_TYPE,
+        GENERATOR_OPTIONS,
+        NONE,
+        SCENARIO_SOURCES,
+        STARLANE_METHODS;
+    }
+
     @NotNull
     private StarAdjustmentMethod adjustmentMethod = StarAdjustmentMethod.NORMAL;
     @NotNull
     private final TextButton closeButton;
     @NotNull
     private final Table contentTableUpper;
+    @Nullable
+    private StarPlacementGenerator currentGenerator;
     @NotNull
     private ScenarioSource currentScenarioSource = ProceduralScenarioSource.CLASSIC;
+    @NotNull
+    private SubDialog dialog = SubDialog.NONE;
     @NotNull
     private final TextButton galaxyGenerateButton;
     @NotNull
@@ -87,8 +101,6 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
     private StarlaneGenerator starlaneGenerator = Registry.STARLANE_GENERATORS.require(RegistryKeys.GALIMULATOR_STARLANES_STANDARD);
     @NotNull
     private final TextButton starlaneGeneratorButton;
-    @Nullable
-    private StarPlacementGenerator currentGenerator;
 
     public GenGalaxyWindow(@NotNull WindowStyle style) {
         super("Generate Galaxy", style);
@@ -107,7 +119,10 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             Drawing.setShownStage(null);
         });
         this.galaxySizeButton = UIUtil.createUnsignedIntInputButton("Star count", this::getGalaxySize, this::setGalaxySize);
-        this.galaxyTypeButton = new RunnableTextButton("Galaxy type", Styles.getInstance().buttonStyle, () -> {
+        this.galaxyTypeButton = new RunnableTextButton("Galaxy type", Styles.getInstance().buttonStyle, (openGalaxyTypeSelectionButton) -> {
+            this.enableCurrentDialogButton();
+            openGalaxyTypeSelectionButton.setDisabled(true);
+            this.dialog = SubDialog.GALAXY_TYPE;
             // Display modal
             Collection<StarPlacementGenerator> generators = StarPlacementRegistry.GENERATOR_REGISTRY.valuesView();
             Table optionsTable = new Table();
@@ -127,6 +142,7 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
                     currentSelectedMapMode.get().setDisabled(false);
                     mapButton.setDisabled(true);
                     currentSelectedMapMode.set(mapButton);
+                    this.currentGenerator = map;
                 });
                 if (map == this.currentGenerator) {
                     currentSelectedMapMode.set(textButton);
@@ -169,6 +185,9 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
         });
 
         this.starAdjustmentsButton = new RunnableTextButton("Adjustments [GRAY](" + this.adjustmentMethod.toString() + ")[]", Styles.getInstance().buttonStyle, (starAdjustmentsButton) -> {
+            this.enableCurrentDialogButton();
+            starAdjustmentsButton.setDisabled(true);
+            this.dialog = SubDialog.ADJUSTMENT_METHODS;
             TreeMap<String, Actor> buttons = new TreeMap<>();
             AtomicReference<Button> currentlyActiveButton = new AtomicReference<>();
             for (StarAdjustmentMethod adjustmentMethod : StarAdjustmentMethod.values()) {
@@ -201,6 +220,9 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
         });
 
         this.starlaneGeneratorButton = new RunnableTextButton("Starlanes [GRAY](" + this.starlaneGenerator.getDisplayName() + ")[]", Styles.getInstance().buttonStyle, (starlaneGenButton) -> {
+            this.enableCurrentDialogButton();
+            starlaneGenButton.setDisabled(true);
+            this.dialog = SubDialog.STARLANE_METHODS;
             TreeMap<String, Actor> buttons = new TreeMap<>();
             AtomicReference<Button> currentlyActiveButton = new AtomicReference<>();
             for (StarlaneGenerator generator : Registry.STARLANE_GENERATORS.getValues()) {
@@ -233,6 +255,9 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
         });
 
         this.scenarioButton = new RunnableTextButton("Scenario [GRAY](" + this.currentScenarioSource.getName() + ")[]", Styles.getInstance().buttonStyle, (scenarioSourceButton) -> {
+            this.enableCurrentDialogButton();
+            scenarioSourceButton.setDisabled(true);
+            this.dialog = SubDialog.SCENARIO_SOURCES;
             TreeMap<String, Actor> buttons = new TreeMap<>();
             AtomicReference<Button> currentlyActiveButton = new AtomicReference<>();
             List<Object> scenarios = new ArrayList<>();
@@ -309,6 +334,31 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
         this.galaxyPreview.dispose();
     }
 
+    private void enableCurrentDialogButton() {
+        switch (this.dialog) {
+        case ADJUSTMENT_METHODS:
+            this.starAdjustmentsButton.setDisabled(false);
+            break;
+        case GALAXY_TYPE:
+            this.galaxyTypeButton.setDisabled(false);
+            break;
+        case GENERATOR_OPTIONS:
+            this.openGeneratorOptionsButton.setDisabled(false);
+            break;
+        case NONE:
+            break;
+        case SCENARIO_SOURCES:
+            this.scenarioButton.setDisabled(false);
+            break;
+        case STARLANE_METHODS:
+            this.starlaneGeneratorButton.setDisabled(false);
+            break;
+        default:
+            LoggerFactory.getLogger(GenGalaxyWindow.class).warn("Unknown dialog button: {}", this.dialog);
+            break;
+        }
+    }
+
     public int getGalaxySize() {
         return this.galaxySize;
     }
@@ -319,6 +369,9 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
     }
 
     private void openGeneratorOptions() {
+        this.enableCurrentDialogButton();
+        this.openGeneratorOptionsButton.setDisabled(true);
+        this.dialog = SubDialog.GENERATOR_OPTIONS;
         MapData map = this.mapdata;
         StarGenerator generator = map.getGenerator();
         if (generator instanceof FractalStarGenerator) {
