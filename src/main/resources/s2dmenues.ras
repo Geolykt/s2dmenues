@@ -1,5 +1,6 @@
 RAS v1 std
 
+ all        0               ACC_PUBLIC      snoddasmannen/galimulator/FloatmapStarGenerator         <init>                  (Ljava/lang/String;I)V
  all        ACC_PRIVATE     ACC_PUBLIC      snoddasmannen/galimulator/FractalStarGenerator          a                       (Lsnoddasmannen/galimulator/FractalStarGenerator$LandGenerator;)V
  all        ACC_PRIVATE     ACC_PUBLIC      snoddasmannen/galimulator/FractalStarGenerator          drawLand                Z
  all        ACC_PRIVATE     ACC_PUBLIC      snoddasmannen/galimulator/FractalStarGenerator          landGenerator           Lsnoddasmannen/galimulator/FractalStarGenerator$LandGenerator;

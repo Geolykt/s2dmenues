@@ -12,6 +12,7 @@ import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -34,6 +35,9 @@ import de.geolykt.s2dmenues.UIUtil;
 import de.geolykt.s2dmenues.bridge.MovingSpiralStarGenerator;
 import de.geolykt.s2dmenues.bridge.ReflectionHacks;
 import de.geolykt.s2dmenues.bridge.VelocityMovingStarGenerator;
+import de.geolykt.s2dmenues.incubator.StarPlacementGenerator;
+import de.geolykt.s2dmenues.incubator.StarPlacementRegistry;
+import de.geolykt.starloader.api.NamespacedKey;
 import de.geolykt.starloader.api.empire.StarlaneGenerator;
 import de.geolykt.starloader.api.gui.Drawing;
 import de.geolykt.starloader.api.registry.Registry;
@@ -51,22 +55,6 @@ import snoddasmannen.galimulator.Space.StarAdjustmentMethod;
 import snoddasmannen.galimulator.StarGenerator;
 
 public class GenGalaxyWindow extends Dialog implements Disposable {
-
-    @NotNull
-    private static String getCategoryName(@NotNull MapData map) {
-        if (map.isQuickmap()) {
-            return "Quickmaps";
-        } else if (map.isFractalMap()) {
-            return "Fractal";
-        } else if (map.hasMovingStars()) {
-            return "Procedural moving";
-        } else if (map.getGenerator() instanceof ProceduralStarGenerator) {
-            return "Procedural";
-        } else if (map.isFullMapFromFile()) {
-            return "Map on disk";
-        }
-        return "Uncategorised";
-    }
 
     @NotNull
     private StarAdjustmentMethod adjustmentMethod = StarAdjustmentMethod.NORMAL;
@@ -99,6 +87,8 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
     private StarlaneGenerator starlaneGenerator = Registry.STARLANE_GENERATORS.require(RegistryKeys.GALIMULATOR_STARLANES_STANDARD);
     @NotNull
     private final TextButton starlaneGeneratorButton;
+    @Nullable
+    private StarPlacementGenerator currentGenerator;
 
     public GenGalaxyWindow(@NotNull WindowStyle style) {
         super("Generate Galaxy", style);
@@ -119,25 +109,29 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
         this.galaxySizeButton = UIUtil.createUnsignedIntInputButton("Star count", this::getGalaxySize, this::setGalaxySize);
         this.galaxyTypeButton = new RunnableTextButton("Galaxy type", Styles.getInstance().buttonStyle, () -> {
             // Display modal
-            Collection<MapData> maps = Space.getSelectableMaps();
+            Collection<StarPlacementGenerator> generators = StarPlacementRegistry.GENERATOR_REGISTRY.valuesView();
             Table optionsTable = new Table();
             ScrollPane optionsScrolling = new ScrollPane(optionsTable, Styles.getInstance().scrollPaneStyle);
             NavigableMap<String, Set<RunnableTextButton>> mapButtons = new TreeMap<>();
 
+            if (this.currentGenerator == null) {
+                this.currentGenerator = StarPlacementRegistry.GENERATOR_REGISTRY.require(NamespacedKey.fromString("galimulator", "PLACEMENT_GENERATOR_STRETCHED_SPIRAL"));
+            }
+
             AtomicReference<RunnableTextButton> currentSelectedMapMode = new AtomicReference<>();
-            for (MapData map : maps) {
-                String mapName = map.getGenerator().name();
-                String categoryName = GenGalaxyWindow.getCategoryName(map);
+            for (StarPlacementGenerator map : generators) {
+                String mapName = map.getDisplayName();
+                String categoryName = map.getDisplayCategory();
                 RunnableTextButton textButton = new RunnableTextButton(Objects.requireNonNull(mapName), Styles.getInstance().buttonStyle, (mapButton) -> {
-                    this.setMapData(map);
+                    this.setMapData((MapData) map.toLegacyMap());
                     currentSelectedMapMode.get().setDisabled(false);
                     mapButton.setDisabled(true);
                     currentSelectedMapMode.set(mapButton);
                 });
-                if (map.getGenerator() == this.mapdata.getGenerator()) {
+                if (map == this.currentGenerator) {
                     currentSelectedMapMode.set(textButton);
                     textButton.setDisabled(true);
-                    this.setMapData(map);
+                    this.setMapData((MapData) map.toLegacyMap());
                 }
                 textButton.addListener((evt) -> {
                     if (evt instanceof InputEvent && ((InputEvent) evt).getType() == InputEvent.Type.enter) {
