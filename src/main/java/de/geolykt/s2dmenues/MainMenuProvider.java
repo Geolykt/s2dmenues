@@ -28,7 +28,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.scenes.scene2d.utils.Disableable;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
-import com.badlogic.gdx.utils.Align;
 
 import de.geolykt.s2dmenues.components.CroppingTextureDrawable;
 import de.geolykt.s2dmenues.components.GenGalaxyWindow;
@@ -111,6 +110,7 @@ public class MainMenuProvider {
         };
 
         MainMenuStage stage = new MainMenuStage(backgroundDrawable, true);
+
         VerticalGroup buttons = new VerticalGroup();
 
         TextButton exit = new TextButton("Exit game", Styles.getInstance().buttonStyle);
@@ -144,9 +144,6 @@ public class MainMenuProvider {
         }));
 
         buttons.setWidth(300F);
-        buttons.setOrigin(Align.bottomLeft);
-        buttons.align(Align.bottom);
-        stage.addActor(buttons);
 
         buttons.addActor(continueG);
         buttons.addActor(newG);
@@ -156,6 +153,14 @@ public class MainMenuProvider {
         buttons.getChildren().forEach((actor) -> {
             actor.setWidth(buttons.getWidth());
         });
+
+        Dialog mainMenuItemsWindow = new Dialog("", Styles.getInstance().windowStyleMainMenu);
+        mainMenuItemsWindow.getContentTable().add(buttons).pad(15F);
+        mainMenuItemsWindow.show(stage);
+        mainMenuItemsWindow.setResizable(true);
+        mainMenuItemsWindow.setResizeBorder(30);
+        mainMenuItemsWindow.setMovable(true);
+        mainMenuItemsWindow.getTitleLabel().remove();
 
         LoggerFactory.getLogger(MainMenuProvider.class).info("Injecting main menu stage");
         Drawing.setShownStage(stage);

@@ -47,6 +47,8 @@ public class Styles implements Disposable {
     public final WindowStyle windowStylePlastic;
     @NotNull
     public final WindowStyle windowStyleTranslucent;
+    @NotNull
+    public final WindowStyle windowStyleMainMenu;
 
     private Styles() {
         this.buttonStyle = new TextButtonStyle();
@@ -115,6 +117,11 @@ public class Styles implements Disposable {
         this.textFieldStyle.cursor.setMinWidth(3F);
 
         this.labelStyleGeneric = new LabelStyle(Drawing.getSpaceFont(), Color.WHITE);
+
+        this.windowStyleMainMenu = new WindowStyle();
+        this.windowStyleMainMenu.titleFont = Drawing.getSpaceFont();
+        this.windowStyleMainMenu.titleFontColor = Color.WHITE;
+        this.windowStyleMainMenu.background = TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(0.8F, 0.5F, 0.5F, 0.6F), 0.2F);
     }
 
     public void dispose() {
