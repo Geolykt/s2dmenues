@@ -2,6 +2,7 @@ package de.geolykt.s2dmenues;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.LoggerFactory;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
@@ -10,9 +11,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TransformDrawable;
 import com.badlogic.gdx.utils.Disposable;
 
+import de.geolykt.s2dmenues.components.FullViewportDrawable;
 import de.geolykt.starloader.api.gui.Drawing;
 
 public class Styles implements Disposable {
@@ -91,13 +95,30 @@ public class Styles implements Disposable {
         this.windowStyleTranslucent.titleFont = Drawing.getSpaceFont();
         this.windowStyleTranslucent.titleFontColor = Color.WHITE;
         this.windowStyleTranslucent.background = TextureCache.getInstance().getGradientWindowTenpatch(true, new Color(0xFF00007F), 0.5F);
-        this.windowStyleTranslucent.stageBackground = new TextureRegionDrawable(Drawing.getTextureProvider().getSinglePixelSquare()).tint(new Color(0x80808080));
+
+        {
+            // Eclipse is acting very very strange today. Further analysis may be required.
+            Drawable tmp = new TextureRegionDrawable(Drawing.getTextureProvider().getSinglePixelSquare()).tint(new Color(0x80808080));
+            if (tmp == null) {
+                LoggerFactory.getLogger(Styles.class).error("new keyword yielded null??? Check your memory.");
+                throw new InternalError();
+            }
+            this.windowStyleTranslucent.stageBackground = new FullViewportDrawable(tmp);
+        }
 
         this.windowStylePlastic = new WindowStyle();
         this.windowStylePlastic.titleFont = Drawing.getSpaceFont();
         this.windowStylePlastic.titleFontColor = Color.WHITE;
         this.windowStylePlastic.background = TextureCache.getInstance().getGradientWindowTenpatch(true, new Color(0x7F7F7FFF), 0.5F);
-        this.windowStylePlastic.stageBackground = new TextureRegionDrawable(Drawing.getTextureProvider().getSinglePixelSquare()).tint(new Color(0x80808080));
+
+        {
+            Drawable tmp = new TextureRegionDrawable(Drawing.getTextureProvider().getSinglePixelSquare()).tint(new Color(0x80808080));
+            if (tmp == null) {
+                LoggerFactory.getLogger(Styles.class).error("new keyword yielded null??? Check your memory.");
+                throw new InternalError();
+            }
+            this.windowStylePlastic.stageBackground = new FullViewportDrawable(tmp);
+        }
 
         this.splitPaneStyle = new SplitPaneStyle();
         this.splitPaneStyle.handle = new TextureRegionDrawable(Drawing.getTextureProvider().getSinglePixelSquare()).tint(Color.BLACK);

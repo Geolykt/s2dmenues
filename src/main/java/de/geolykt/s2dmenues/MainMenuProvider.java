@@ -110,6 +110,7 @@ public class MainMenuProvider {
         };
 
         MainMenuStage stage = new MainMenuStage(backgroundDrawable, true);
+//        stage.setViewport(new FillViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()));
 
         VerticalGroup buttons = new VerticalGroup();
 

@@ -5,11 +5,13 @@ import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Disposable;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 
 public class MainMenuStage extends Stage {
 
@@ -19,7 +21,10 @@ public class MainMenuStage extends Stage {
     private final boolean disposeBackground;
 
     public MainMenuStage(@NotNull Drawable background, boolean disposeBackground) {
-        super(new ScreenViewport());
+        // TODO the viewport induces harder to read text; perhaps we should use a scaling font such as MSDF or plainly
+        // a font with a more adapted resolution. MSDF might be a good try - we shall see.
+        super(new FitViewport(Gdx.graphics.getWidth() - 160, Gdx.graphics.getHeight() - 90));
+
         this.background = background;
         this.disposeBackground = disposeBackground;
     }
@@ -35,6 +40,7 @@ public class MainMenuStage extends Stage {
         if (!this.disposeBackground) {
             return;
         }
+
         if (this.background instanceof Disposable) {
             ((Disposable) this.background).dispose();
         } else if (this.background instanceof TextureRegionDrawable) {
@@ -44,13 +50,22 @@ public class MainMenuStage extends Stage {
 
     @Override
     public void draw() {
-        this.getBatch().setProjectionMatrix(this.getViewport().getCamera().projection);
+        int w = Gdx.graphics.getBackBufferWidth();
+        int h = Gdx.graphics.getBackBufferHeight();
+        Matrix4 projectionMatrix = this.getBatch().getProjectionMatrix().set(
+                -1F, -1F, 0,
+                0, 0, 0, 0,
+                2F / w, 2F / h, 0
+        );
+
+        this.getBatch().setProjectionMatrix(projectionMatrix);
         this.getBatch().setColor(1, 1, 1, 1);
+        Gdx.gl20.glViewport(0, 0, w, h);
         this.getBatch().begin();
-        float w = this.getViewport().getWorldWidth();
-        float h = this.getViewport().getWorldHeight();
-        this.background.draw(this.getBatch(), -w/2, -h/2, w, h);
+        this.background.draw(this.getBatch(), 0, 0, w, h);
         this.getBatch().end();
+
+        this.getViewport().apply();
         super.draw();
     }
 }

@@ -79,7 +79,7 @@ public class UIUtil {
     public static void showInputDialogUnsignedInt(@NotNull Stage stage, @NotNull IntConsumer onAccept) {
         UIUtil.showInputDialog(stage, (text) -> {
             try {
-                if (!text.isEmpty()) { // Make no text be like no operation
+                if (!text.isEmpty()) { // Make no text behave like a no-op
                     onAccept.accept(Integer.parseUnsignedInt(text));
                 }
             } catch (NumberFormatException nfe) {

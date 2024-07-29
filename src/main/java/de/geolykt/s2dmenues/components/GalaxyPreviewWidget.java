@@ -246,12 +246,12 @@ public class GalaxyPreviewWidget extends Widget implements Disposable {
 
     @Override
     public float getPrefHeight() {
-        return 300F;
+        return 100F;
     }
 
     @Override
     public float getPrefWidth() {
-        return 300F;
+        return 100F;
     }
 
     public void reset() {

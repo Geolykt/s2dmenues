@@ -53,7 +53,7 @@ deployMods {
 }
 
 dependencies {
-    dependencyMods("de.geolykt:starloader-api:2.0.0-a20240715:remapped")
+    dependencyMods("de.geolykt:starloader-api:2.0.0-a20240728.1:remapped")
     devRuntime "org.stianloader:launcher-micromixin:4.0.0-a20240713"
     compileOnly "org.stianloader:micromixin-annotations:0.6.1-a20240713"
     compileOnly "de.geolykt.starloader:starplane-annotations:1.0.0"
