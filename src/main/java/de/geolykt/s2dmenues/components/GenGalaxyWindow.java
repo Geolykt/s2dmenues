@@ -119,7 +119,7 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             Drawing.setShownStage(null);
         });
         this.galaxySizeButton = UIUtil.createUnsignedIntInputButton("Star count", this::getGalaxySize, this::setGalaxySize);
-        this.galaxyTypeButton = new RunnableTextButton("Galaxy type", Styles.getInstance().buttonStyle, (openGalaxyTypeSelectionButton) -> {
+        this.galaxyTypeButton = new MSDFTextButton("Galaxy type", Styles.getInstance().buttonStyle, (openGalaxyTypeSelectionButton) -> {
             this.enableCurrentDialogButton();
             openGalaxyTypeSelectionButton.setDisabled(true);
             this.dialog = SubDialog.GALAXY_TYPE;
@@ -137,7 +137,7 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             for (StarPlacementGenerator map : generators) {
                 String mapName = map.getDisplayName();
                 String categoryName = map.getDisplayCategory();
-                RunnableTextButton textButton = new RunnableTextButton(Objects.requireNonNull(mapName), Styles.getInstance().buttonStyle, (mapButton) -> {
+                RunnableTextButton textButton = new MSDFTextButton(Objects.requireNonNull(mapName), Styles.getInstance().buttonStyle, (mapButton) -> {
                     this.setMapData((MapData) map.toLegacyMap());
                     currentSelectedMapMode.get().setDisabled(false);
                     mapButton.setDisabled(true);
@@ -171,7 +171,7 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
                 HorizontalGroup options = new HorizontalGroup().wrap().fill();
                 buttons.getValue().forEach(options::addActor);
 
-                TextButton categoryButton = new RunnableTextButton(categoryName, Styles.getInstance().buttonStyle, () -> {
+                TextButton categoryButton = new MSDFTextButton(categoryName, Styles.getInstance().buttonStyle, () -> {
                     // NOP
                 });
                 optionsTable.add(categoryButton).left().growX().row();
@@ -184,14 +184,14 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             }
         });
 
-        this.starAdjustmentsButton = new RunnableTextButton("Adjustments [GRAY](" + this.adjustmentMethod.toString() + ")[]", Styles.getInstance().buttonStyle, (starAdjustmentsButton) -> {
+        this.starAdjustmentsButton = new MSDFTextButton("Adjustments [GRAY](" + this.adjustmentMethod.toString() + ")[]", Styles.getInstance().buttonStyle, (starAdjustmentsButton) -> {
             this.enableCurrentDialogButton();
             starAdjustmentsButton.setDisabled(true);
             this.dialog = SubDialog.ADJUSTMENT_METHODS;
             TreeMap<String, Actor> buttons = new TreeMap<>();
             AtomicReference<Button> currentlyActiveButton = new AtomicReference<>();
             for (StarAdjustmentMethod adjustmentMethod : StarAdjustmentMethod.values()) {
-                Button adjustmentButton = new RunnableTextButton(Objects.toString(adjustmentMethod), Styles.getInstance().buttonStyle, (clickedOption) -> {
+                Button adjustmentButton = new MSDFTextButton(Objects.toString(adjustmentMethod), Styles.getInstance().buttonStyle, (clickedOption) -> {
                     this.adjustmentMethod = adjustmentMethod;
                     starAdjustmentsButton.setText("Adjustments [GRAY](" + this.adjustmentMethod.toString() + ")[]");
                     currentlyActiveButton.get().setDisabled(false);
@@ -219,14 +219,14 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             }
         });
 
-        this.starlaneGeneratorButton = new RunnableTextButton("Starlanes [GRAY](" + this.starlaneGenerator.getDisplayName() + ")[]", Styles.getInstance().buttonStyle, (starlaneGenButton) -> {
+        this.starlaneGeneratorButton = new MSDFTextButton("Starlanes [GRAY](" + this.starlaneGenerator.getDisplayName() + ")[]", Styles.getInstance().buttonStyle, (starlaneGenButton) -> {
             this.enableCurrentDialogButton();
             starlaneGenButton.setDisabled(true);
             this.dialog = SubDialog.STARLANE_METHODS;
             TreeMap<String, Actor> buttons = new TreeMap<>();
             AtomicReference<Button> currentlyActiveButton = new AtomicReference<>();
             for (StarlaneGenerator generator : Registry.STARLANE_GENERATORS.getValues()) {
-                Button generatorButton = new RunnableTextButton(generator.getDisplayName(), Styles.getInstance().buttonStyle, (clickedOption) -> {
+                Button generatorButton = new MSDFTextButton(generator.getDisplayName(), Styles.getInstance().buttonStyle, (clickedOption) -> {
                     this.starlaneGenerator = generator;
                     starlaneGenButton.setText("Starlanes [GRAY](" + this.starlaneGenerator.getDisplayName() + ")[]");
                     currentlyActiveButton.get().setDisabled(false);
@@ -254,7 +254,7 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             }
         });
 
-        this.scenarioButton = new RunnableTextButton("Scenario [GRAY](" + this.currentScenarioSource.getName() + ")[]", Styles.getInstance().buttonStyle, (scenarioSourceButton) -> {
+        this.scenarioButton = new MSDFTextButton("Scenario [GRAY](" + this.currentScenarioSource.getName() + ")[]", Styles.getInstance().buttonStyle, (scenarioSourceButton) -> {
             this.enableCurrentDialogButton();
             scenarioSourceButton.setDisabled(true);
             this.dialog = SubDialog.SCENARIO_SOURCES;
@@ -267,7 +267,7 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             }
             for (Object scenario : scenarios) {
                 ScenarioSource scenarioSource = (ScenarioSource) scenario;
-                Button scenarioButton = new RunnableTextButton(Objects.requireNonNull(scenarioSource.getName()), Styles.getInstance().buttonStyle, (clickedOption) -> {
+                Button scenarioButton = new MSDFTextButton(Objects.requireNonNull(scenarioSource.getName()), Styles.getInstance().buttonStyle, (clickedOption) -> {
                     this.currentScenarioSource = scenarioSource;
                     scenarioSourceButton.setText("Scenario [GRAY](" + this.currentScenarioSource.getName() + ")[]");
                     currentlyActiveButton.get().setDisabled(false);
@@ -294,9 +294,7 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
                 this.masterSplitPane.setSplitAmount(0.8F);
             }
         });
-        this.closeButton = new RunnableTextButton("Close", Styles.getInstance().cancelButtonStyle, (button) -> {
-            GenGalaxyWindow.this.hide();
-        });
+        this.closeButton = new RunnableTextButton("Close", Styles.getInstance().cancelButtonStyle, (Runnable) GenGalaxyWindow.this::hide);
         this.galaxyPreview = new GalaxyPreviewWidget(this);
         this.openGeneratorOptionsButton = new RunnableTextButton("Generator options", Styles.getInstance().buttonStyle, this::openGeneratorOptions);
 
@@ -379,7 +377,7 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
 
             Table optionTable = new Table();
 
-            TextButton fractalAlgoHeader = new RunnableTextButton("Fractal algorithm", Styles.getInstance().buttonStyle, () -> {
+            TextButton fractalAlgoHeader = new MSDFTextButton("Fractal algorithm", Styles.getInstance().buttonStyle, () -> {
                 // NOP
             });
 
@@ -387,7 +385,7 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             Button[] algorithmButtons = new TextButton[FractalStarGenerator.LandGenerator.values().length];
             AtomicReference<Button> currentActiveButton = new AtomicReference<>();
             for (FractalStarGenerator.LandGenerator algo : FractalStarGenerator.LandGenerator.values()) {
-                Button algorithmButton = new RunnableTextButton(Objects.toString(algo), Styles.getInstance().buttonStyle, (clickedButton) -> {
+                Button algorithmButton = new MSDFTextButton(Objects.toString(algo), Styles.getInstance().buttonStyle, (clickedButton) -> {
                     for (Button button : algorithmButtons) {
                         button.setDisabled(false);
                     }
@@ -408,7 +406,7 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             optionTable.add(fractalAlgoHeader).left().growX().row();
             optionTable.add(fractalAlgoOptions).growX().row();
 
-            TextButton aspectRatioHeader = new RunnableTextButton("Aspect ratio [GRAY](Note: The preview cannot properly represent the current aspect ratio.)[]", Styles.getInstance().buttonStyle, () -> {
+            TextButton aspectRatioHeader = new MSDFTextButton("Aspect ratio [GRAY](Note: The preview cannot properly represent the current aspect ratio.)[]", Styles.getInstance().buttonStyle, () -> {
                 // NOP
             });
 

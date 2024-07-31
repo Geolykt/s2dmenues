@@ -31,6 +31,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 
 import de.geolykt.s2dmenues.components.CroppingTextureDrawable;
 import de.geolykt.s2dmenues.components.GenGalaxyWindow;
+import de.geolykt.s2dmenues.components.MSDFTextButton;
 import de.geolykt.s2dmenues.components.NOPActor;
 import de.geolykt.s2dmenues.components.S2DSavegameBrowser;
 import de.geolykt.s2dmenues.components.TextDrawable;
@@ -114,22 +115,15 @@ public class MainMenuProvider {
 
         VerticalGroup buttons = new VerticalGroup();
 
-        TextButton exit = new TextButton("Exit game", Styles.getInstance().buttonStyle);
-        exit.addListener(new RunnableClickListener(Gdx.app::exit));
-        TextButton load = new TextButton("Load galaxy", Styles.getInstance().buttonStyle);
-        TextButton newG = new TextButton("New galaxy", Styles.getInstance().buttonStyle);
-        TextButton continueG = new TextButton("Continue galaxy", Styles.getInstance().buttonStyle);
-        continueG.addListener(new RunnableClickListener(() -> {
-            Drawing.setShownStage(null);
-        }));
-        load.addListener(new RunnableClickListener(() -> {
-            MainMenuProvider.displayLoadMenu(stage);
-        }));
-
         // Keep a reference to the galaxy generation window in order to avoid settings getting reset when reopening
         // the galaxy generation window. Though it probably could be all static variables instead - who knows?
         AtomicReference<GenGalaxyWindow> genGalaxyWindow = new AtomicReference<>();
-        newG.addListener(new RunnableClickListener(() -> {
+
+        TextButton exit = new MSDFTextButton("Exit game", Styles.getInstance().buttonStyle, Gdx.app::exit);
+        TextButton load = new MSDFTextButton("Load galaxy", Styles.getInstance().buttonStyle, () -> {
+            MainMenuProvider.displayLoadMenu(stage);
+        });
+        TextButton newG = new MSDFTextButton("New galaxy", Styles.getInstance().buttonStyle, () -> {
             MainMenuProvider.disableAll(stage.getRoot());
             GenGalaxyWindow window = genGalaxyWindow.get();
             if (window == null) {
@@ -142,7 +136,10 @@ public class MainMenuProvider {
                 stage.addCleanupHandler(window::dispose);
             }
             window.show(stage);
-        }));
+        });
+        TextButton continueG = new MSDFTextButton("Continue galaxy", Styles.getInstance().buttonStyle, () -> {
+            Drawing.setShownStage(null);
+        });
 
         buttons.setWidth(300F);
 

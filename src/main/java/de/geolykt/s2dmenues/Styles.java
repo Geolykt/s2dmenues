@@ -1,8 +1,9 @@
 package de.geolykt.s2dmenues;
 
+import java.util.Objects;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.LoggerFactory;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
@@ -11,12 +12,13 @@ import com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle;
-import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
-import com.badlogic.gdx.scenes.scene2d.utils.TransformDrawable;
 import com.badlogic.gdx.utils.Disposable;
+import com.maltaisn.msdfgdx.FontStyle;
+import com.maltaisn.msdfgdx.MsdfFont;
 
 import de.geolykt.s2dmenues.components.FullViewportDrawable;
+import de.geolykt.s2dmenues.components.MSDFTextButton.MSDFButtonStyle;
 import de.geolykt.starloader.api.gui.Drawing;
 
 public class Styles implements Disposable {
@@ -34,7 +36,7 @@ public class Styles implements Disposable {
     }
 
     @NotNull
-    public final TextButtonStyle buttonStyle;
+    public final MSDFButtonStyle buttonStyle;
     @NotNull
     public final TextButtonStyle cancelButtonStyle;
     @NotNull
@@ -55,17 +57,20 @@ public class Styles implements Disposable {
     public final WindowStyle windowStyleMainMenu;
 
     private Styles() {
-        this.buttonStyle = new TextButtonStyle();
-        this.buttonStyle.font = Drawing.getSpaceFont();
-        this.buttonStyle.fontColor = Color.WHITE;
-        this.buttonStyle.up = TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(0xFE5B3EFF), 0.66F);
-        this.buttonStyle.up.setMinWidth(300F);
-        this.buttonStyle.over = TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(0xFF3814FF), 0.75F);
-        this.buttonStyle.over.setMinWidth(300F);
-        this.buttonStyle.down = TextureCache.getInstance().getGradientWindowTenpatch(true, new Color(0x487C9AFF), 0.5F);
-        this.buttonStyle.down.setMinWidth(300F);
-        this.buttonStyle.disabled = TextureCache.getInstance().getGradientWindowTenpatch(true, new Color(0x487C9AFF), 0.5F);
-        this.buttonStyle.disabled.setMinWidth(300F);
+        {
+            FontStyle msdfFontStyle = new FontStyle();
+            msdfFontStyle.setSize(Drawing.getSpaceFont().getLineHeight());
+            this.buttonStyle = new MSDFButtonStyle(new MsdfFont(Drawing.getSpaceFont(), Drawing.getSpaceFont().getLineHeight(), 1F), msdfFontStyle);
+            this.buttonStyle.fontStyleUp.setColor(Objects.requireNonNull(Color.WHITE));
+            this.buttonStyle.up = TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(0xFE5B3EFF), 0.66F);
+            this.buttonStyle.up.setMinWidth(300F);
+            this.buttonStyle.over = TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(0xFF3814FF), 0.75F);
+            this.buttonStyle.over.setMinWidth(300F);
+            this.buttonStyle.down = TextureCache.getInstance().getGradientWindowTenpatch(true, new Color(0x487C9AFF), 0.5F);
+            this.buttonStyle.down.setMinWidth(300F);
+            this.buttonStyle.disabled = TextureCache.getInstance().getGradientWindowTenpatch(true, new Color(0x487C9AFF), 0.5F);
+            this.buttonStyle.disabled.setMinWidth(300F);
+        }
 
         this.cancelButtonStyle = new TextButtonStyle();
         this.cancelButtonStyle.font = Drawing.getSpaceFont();
@@ -96,28 +101,17 @@ public class Styles implements Disposable {
         this.windowStyleTranslucent.titleFontColor = Color.WHITE;
         this.windowStyleTranslucent.background = TextureCache.getInstance().getGradientWindowTenpatch(true, new Color(0xFF00007F), 0.5F);
 
-        {
-            // Eclipse is acting very very strange today. Further analysis may be required.
-            Drawable tmp = new TextureRegionDrawable(Drawing.getTextureProvider().getSinglePixelSquare()).tint(new Color(0x80808080));
-            if (tmp == null) {
-                LoggerFactory.getLogger(Styles.class).error("new keyword yielded null??? Check your memory.");
-                throw new InternalError();
-            }
-            this.windowStyleTranslucent.stageBackground = new FullViewportDrawable(tmp);
-        }
-
         this.windowStylePlastic = new WindowStyle();
         this.windowStylePlastic.titleFont = Drawing.getSpaceFont();
         this.windowStylePlastic.titleFontColor = Color.WHITE;
         this.windowStylePlastic.background = TextureCache.getInstance().getGradientWindowTenpatch(true, new Color(0x7F7F7FFF), 0.5F);
 
         {
-            Drawable tmp = new TextureRegionDrawable(Drawing.getTextureProvider().getSinglePixelSquare()).tint(new Color(0x80808080));
-            if (tmp == null) {
-                LoggerFactory.getLogger(Styles.class).error("new keyword yielded null??? Check your memory.");
-                throw new InternalError();
-            }
-            this.windowStylePlastic.stageBackground = new FullViewportDrawable(tmp);
+            TextureRegionDrawable tmp = new TextureRegionDrawable(Drawing.getTextureProvider().getSinglePixelSquare());
+            // Warning: TextureRegionDrawable.tint() does not return itself - that is the method call is 'pure'.
+            FullViewportDrawable fullViewportDrawable = new FullViewportDrawable(Objects.requireNonNull(tmp.tint(new Color(0x80808080))));
+            this.windowStyleTranslucent.stageBackground = fullViewportDrawable;
+            this.windowStylePlastic.stageBackground = fullViewportDrawable;
         }
 
         this.splitPaneStyle = new SplitPaneStyle();

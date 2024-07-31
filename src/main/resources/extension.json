@@ -34,6 +34,14 @@
                 "exclusions": [
                     "com.badlogicgames.gdx:gdx"
                 ]
+            }, {
+                "group": "com.maltaisn",
+                "artifact": "msdf-gdx",
+                "version": "${msdfVersion}",
+                "exclusions": [
+                    "com.badlogicgames.gdx:gdx",
+                    "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+                ]
             }
         ]
     }

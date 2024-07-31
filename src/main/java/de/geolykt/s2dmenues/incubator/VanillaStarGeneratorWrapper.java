@@ -2,9 +2,9 @@ package de.geolykt.s2dmenues.incubator;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
-import org.stianloader.micromixin.transform.internal.util.Objects;
 
 import de.geolykt.starloader.api.NamespacedKey;
 

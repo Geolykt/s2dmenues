@@ -54,12 +54,18 @@ deployMods {
 
 dependencies {
     dependencyMods("de.geolykt:starloader-api:2.0.0-a20240728.1:remapped")
-    devRuntime "org.stianloader:launcher-micromixin:4.0.0-a20240713"
-    compileOnly "org.stianloader:micromixin-annotations:0.6.1-a20240713"
+    devRuntime "org.stianloader:launcher-micromixin:4.0.0-a20240731"
+    compileOnly "org.stianloader:micromixin-annotations:0.6.2-a20240731"
     compileOnly "de.geolykt.starloader:starplane-annotations:1.0.0"
     compileOnlyApi "org.jetbrains:annotations:24.1.0"
 
     compileOnly("com.github.raeleus.TenPatch:tenpatch:$tenpatchVersion") {
+        exclude group: 'com.badlogicgames.gdx', module: 'gdx'
+    }
+
+    // https://mvnrepository.com/artifact/com.maltaisn/msdf-gdx
+    compileOnly("com.maltaisn:msdf-gdx:$msdfVersion") {
+        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
         exclude group: 'com.badlogicgames.gdx', module: 'gdx'
     }
 }

@@ -7,11 +7,14 @@ import java.nio.IntBuffer;
 import org.jetbrains.annotations.NotNull;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+
+import de.geolykt.starloader.api.gui.Drawing;
 
 public class FullViewportDrawable extends BaseDrawable {
 
@@ -54,6 +57,7 @@ public class FullViewportDrawable extends BaseDrawable {
         int fullHeight = Gdx.graphics.getBackBufferHeight();
         batch.setProjectionMatrix(new Matrix4().translate(-1F, -1F, 0F).scale(2F / fullWidth, 2F / fullHeight, 0F));
         batch.begin();
+
         this.delegate.draw(batch, 0, 0, fullWidth, fullHeight);
         batch.end();
 

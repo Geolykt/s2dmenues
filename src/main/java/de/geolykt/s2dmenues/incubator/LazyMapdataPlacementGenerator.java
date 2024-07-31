@@ -2,10 +2,10 @@ package de.geolykt.s2dmenues.incubator;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.stianloader.micromixin.transform.internal.util.Objects;
 
 import com.badlogic.gdx.files.FileHandle;
 

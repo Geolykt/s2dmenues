@@ -16,6 +16,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 
+import de.geolykt.s2dmenues.components.MSDFTextButton;
 import de.geolykt.s2dmenues.components.RunnableTextButton;
 import de.geolykt.starloader.api.utils.FloatConsumer;
 
@@ -28,7 +29,7 @@ public class UIUtil {
 
     @NotNull
     public static TextButton createTextInputButton(@NotNull String description, @NotNull Supplier<@NotNull String> currentValueSupplier, @NotNull Consumer<@NotNull String> currentValueSetter) {
-        return new RunnableTextButton(description + " [GRAY](" + currentValueSupplier.get() + ")[]", Styles.getInstance().buttonStyle, (textButton) -> {
+        return new MSDFTextButton(description + " [GRAY](" + currentValueSupplier.get() + ")[]", Styles.getInstance().buttonStyle, (textButton) -> {
             UIUtil.showInputDialog(Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), value -> {
                 currentValueSetter.accept(value);
                 textButton.setText(description + " [GRAY](" + currentValueSupplier.get() + ")[]");
@@ -38,7 +39,7 @@ public class UIUtil {
 
     @NotNull
     public static TextButton createFloatInputButton(@NotNull String description, @NotNull FloatSupplier currentValueSupplier, @NotNull FloatConsumer currentValueSetter) {
-        return new RunnableTextButton(description + " [GRAY](" + currentValueSupplier.getAsFloat() + ")[]", Styles.getInstance().buttonStyle, (textButton) -> {
+        return new MSDFTextButton(description + " [GRAY](" + currentValueSupplier.getAsFloat() + ")[]", Styles.getInstance().buttonStyle, (textButton) -> {
             UIUtil.showInputDialogFloat(Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), value -> {
                 currentValueSetter.accept(value);
                 textButton.setText(description + " [GRAY](" + currentValueSupplier.getAsFloat() + ")[]");
@@ -48,7 +49,7 @@ public class UIUtil {
 
     @NotNull
     public static TextButton createUnsignedIntInputButton(@NotNull String description, @NotNull IntSupplier currentValueSupplier, @NotNull IntConsumer currentValueSetter) {
-        return new RunnableTextButton(description + " [GRAY](" + currentValueSupplier.getAsInt() + ")[]", Styles.getInstance().buttonStyle, (textButton) -> {
+        return new MSDFTextButton(description + " [GRAY](" + currentValueSupplier.getAsInt() + ")[]", Styles.getInstance().buttonStyle, (textButton) -> {
             UIUtil.showInputDialogUnsignedInt(Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), value -> {
                 currentValueSetter.accept(value);
                 textButton.setText(description + " [GRAY](" + currentValueSupplier.getAsInt() + ")[]");
