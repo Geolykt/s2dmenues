@@ -2,10 +2,12 @@ package de.geolykt.s2dmenues;
 
 import java.util.Objects;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle;
@@ -16,6 +18,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Disposable;
 import com.maltaisn.msdfgdx.FontStyle;
 import com.maltaisn.msdfgdx.MsdfFont;
+import com.maltaisn.msdfgdx.MsdfShader;
 
 import de.geolykt.s2dmenues.components.FullViewportDrawable;
 import de.geolykt.s2dmenues.components.MSDFTextButton.MSDFButtonStyle;
@@ -44,23 +47,35 @@ public class Styles implements Disposable {
     @NotNull
     public final LabelStyle labelStyleGeneric;
     @NotNull
+    public final MsdfFont msdfFont;
+    @NotNull
+    private final FontStyle msdfFontStyleBase;
+    @NotNull
+    public final MsdfShader msdfShader;
+    @NotNull
     public final ScrollPaneStyle scrollPaneStyle;
     @NotNull
     public final SplitPaneStyle splitPaneStyle;
     @NotNull
     public final TextFieldStyle textFieldStyle;
     @NotNull
+    public final WindowStyle windowStyleMainMenu;
+    @NotNull
     public final WindowStyle windowStylePlastic;
     @NotNull
     public final WindowStyle windowStyleTranslucent;
-    @NotNull
-    public final WindowStyle windowStyleMainMenu;
 
     private Styles() {
+
+        // MONOTYPE_BIG is another alternative
+        BitmapFont msdfBMPFont = Objects.requireNonNull(Drawing.getFontBitmap("SPACE"), "The requested font could not be not found");
+        this.msdfFont = new MsdfFont(msdfBMPFont, msdfBMPFont.getLineHeight(), 1F);
+        this.msdfShader = new MsdfShader();
+        this.msdfFontStyleBase = new FontStyle();
+        this.msdfFontStyleBase.setSize(this.msdfFont.getGlyphSize());
+
         {
-            FontStyle msdfFontStyle = new FontStyle();
-            msdfFontStyle.setSize(Drawing.getSpaceFont().getLineHeight());
-            this.buttonStyle = new MSDFButtonStyle(new MsdfFont(Drawing.getSpaceFont(), Drawing.getSpaceFont().getLineHeight(), 1F), msdfFontStyle);
+            this.buttonStyle = new MSDFButtonStyle(this.msdfFont, this.getMSDFFontStyle());
             this.buttonStyle.fontStyleUp.setColor(Objects.requireNonNull(Color.WHITE));
             this.buttonStyle.up = TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(0xFE5B3EFF), 0.66F);
             this.buttonStyle.up.setMinWidth(300F);
@@ -142,6 +157,13 @@ public class Styles implements Disposable {
     public void dispose() {
         if (this == Styles.instance) {
             Styles.instance = null;
+            this.msdfShader.dispose();
         }
+    }
+
+    @NotNull
+    @Contract(pure = true)
+    public final FontStyle getMSDFFontStyle() {
+        return new FontStyle(this.msdfFontStyleBase);
     }
 }

@@ -21,11 +21,12 @@ public class S2DMenues extends Extension {
         } else {
             EventManager.registerListener(new Listener() {
                 @EventHandler(EventPriority.HIGH)
-                public void onPostSart(@NotNull ApplicationStartedEvent evt) {
+                public void onPostStart(@NotNull ApplicationStartedEvent evt) {
                     MainMenuProvider.display();
                 }
             });
         }
+
         EventManager.registerListener(new Listener() {
             @EventHandler
             public void onStop(@NotNull ApplicationStopEvent evt) {

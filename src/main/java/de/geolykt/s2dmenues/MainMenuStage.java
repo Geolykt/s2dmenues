@@ -21,9 +21,7 @@ public class MainMenuStage extends Stage {
     private final boolean disposeBackground;
 
     public MainMenuStage(@NotNull Drawable background, boolean disposeBackground) {
-        // TODO the viewport induces harder to read text; perhaps we should use a scaling font such as MSDF or plainly
-        // a font with a more adapted resolution. MSDF might be a good try - we shall see.
-        super(new FitViewport(Gdx.graphics.getWidth() - 160, Gdx.graphics.getHeight() - 90));
+        super(new FitViewport(1760, 990));
 
         this.background = background;
         this.disposeBackground = disposeBackground;

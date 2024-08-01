@@ -3,6 +3,7 @@ package de.geolykt.s2dmenues;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,12 +26,15 @@ import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
+import com.badlogic.gdx.scenes.scene2d.ui.Widget;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.scenes.scene2d.utils.Disableable;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.maltaisn.msdfgdx.FontStyle;
 
 import de.geolykt.s2dmenues.components.CroppingTextureDrawable;
 import de.geolykt.s2dmenues.components.GenGalaxyWindow;
+import de.geolykt.s2dmenues.components.MSDFScrollingTextWidget;
 import de.geolykt.s2dmenues.components.MSDFTextButton;
 import de.geolykt.s2dmenues.components.NOPActor;
 import de.geolykt.s2dmenues.components.S2DSavegameBrowser;
@@ -111,7 +115,6 @@ public class MainMenuProvider {
         };
 
         MainMenuStage stage = new MainMenuStage(backgroundDrawable, true);
-//        stage.setViewport(new FillViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()));
 
         VerticalGroup buttons = new VerticalGroup();
 
@@ -152,13 +155,28 @@ public class MainMenuProvider {
             actor.setWidth(buttons.getWidth());
         });
 
+        String creditsMessage;
+        try {
+            creditsMessage = new String(Files.readAllBytes(parentDir.resolve("credits.txt")), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            creditsMessage = "\\centerjustify \\fontsize=1.5 \\shadowcolor=WHITE s2dmenues is a mod for galimulator written by geolykt.\nError: Couldn't read credits file:\n" + sw.toString().replace("\t", "  ");
+        }
+
+        FontStyle creditsFontStyle = Styles.getInstance().getMSDFFontStyle();
+        Widget creditsWidget = new MSDFScrollingTextWidget(Styles.getInstance().msdfFont, creditsFontStyle, Styles.getInstance().msdfShader, creditsMessage);
+        creditsWidget.setWidth(400F);
+
         Dialog mainMenuItemsWindow = new Dialog("", Styles.getInstance().windowStyleMainMenu);
         mainMenuItemsWindow.getContentTable().add(buttons).pad(15F);
-        mainMenuItemsWindow.show(stage);
+        mainMenuItemsWindow.getContentTable().add(creditsWidget).fillY();
+        mainMenuItemsWindow.getTitleLabel().remove();
         mainMenuItemsWindow.setResizable(true);
         mainMenuItemsWindow.setResizeBorder(30);
         mainMenuItemsWindow.setMovable(true);
-        mainMenuItemsWindow.getTitleLabel().remove();
+        mainMenuItemsWindow.pack();
+        mainMenuItemsWindow.show(stage);
 
         LoggerFactory.getLogger(MainMenuProvider.class).info("Injecting main menu stage");
         Drawing.setShownStage(stage);

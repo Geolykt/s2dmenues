@@ -9,8 +9,9 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.Align;
 import com.maltaisn.msdfgdx.FontStyle;
 import com.maltaisn.msdfgdx.MsdfFont;
-import com.maltaisn.msdfgdx.MsdfShader;
 import com.maltaisn.msdfgdx.widget.MsdfLabel;
+
+import de.geolykt.s2dmenues.Styles;
 
 public class MSDFTextButton extends RunnableTextButton {
 
@@ -36,7 +37,7 @@ public class MSDFTextButton extends RunnableTextButton {
         this.style = style;
         Skin skin = new Skin();
         skin.add(this.style.fontStyleUp.getFontName(), this.style.font);
-        skin.add("default", new MsdfShader());
+        skin.add("default", Styles.getInstance().msdfShader);
         Label label = new MsdfLabel(text, skin, this.style.fontStyleUp);
         label.setAlignment(Align.center);
         this.setLabel(label);
@@ -48,7 +49,7 @@ public class MSDFTextButton extends RunnableTextButton {
         this.style = style;
         Skin skin = new Skin();
         skin.add(this.style.fontStyleUp.getFontName(), this.style.font);
-        skin.add("default", new MsdfShader());
+        skin.add("default", Styles.getInstance().msdfShader);
         Label label = new MsdfLabel(text, skin, this.style.fontStyleUp);
         label.setAlignment(Align.center);
         this.setLabel(label);
