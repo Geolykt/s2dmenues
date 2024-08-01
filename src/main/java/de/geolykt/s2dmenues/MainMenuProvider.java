@@ -161,7 +161,7 @@ public class MainMenuProvider {
         } catch (IOException e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
-            creditsMessage = "\\centerjustify \\fontsize=1.5 \\shadowcolor=WHITE s2dmenues is a mod for galimulator written by geolykt.\nError: Couldn't read credits file:\n" + sw.toString().replace("\t", "  ");
+            creditsMessage = "\\centerjustify \\fontsize=1.5 \\shadowcolor=WHITE s2dmenues is a mod for galimulator written by geolykt.\nError: Couldn't read credits file:\n" + sw.toString().replace("\t", "    ");
         }
 
         FontStyle creditsFontStyle = Styles.getInstance().getMSDFFontStyle();

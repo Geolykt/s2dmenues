@@ -22,9 +22,11 @@ import com.maltaisn.msdfgdx.MsdfShader;
 import com.maltaisn.msdfgdx.widget.MsdfLabel;
 
 import de.geolykt.s2dmenues.bridge.FontStyleMarkerInterface;
+import de.geolykt.starloader.api.gui.Drawing;
 
 public class MSDFScrollingTextWidget extends Widget {
 
+    private float horizontalScroll = 0F;
     @NotNull
     private MsdfFont msdfFont;
     @NotNull
@@ -36,13 +38,52 @@ public class MSDFScrollingTextWidget extends Widget {
     private List<MsdfLabel> runs = Collections.emptyList();
     @NotNull
     private String text = "";
-    private float horizontalScroll = 0F;
 
     public MSDFScrollingTextWidget(@NotNull MsdfFont font, @NotNull FontStyle msdfFontStyle, @NotNull MsdfShader shader, @NotNull CharSequence text) {
         this.msdfFont = font;
         this.msdfFontStyle = msdfFontStyle;
         this.msdfShader = shader;
         this.setText(text);
+    }
+
+    @Override
+    public void draw(Batch batch, float parentAlpha) {
+        batch = Objects.requireNonNull(batch, "argument 'batch' may not be null.");
+        super.draw(batch, parentAlpha);
+
+        float relY = this.horizontalScroll;
+
+//        batch.setColor(Color.DARK_GRAY.r, Color.DARK_GRAY.g, Color.DARK_GRAY.b, 1F * parentAlpha);
+//        batch.draw(Drawing.getTextureProvider().getSinglePixelSquare(), this.getX(), this.getY(), this.getWidth(), this.getHeight());
+//        batch.setColor(Color.WHITE);
+
+        for (MsdfLabel run : this.runs) {
+            if (Align.isLeft(run.getLabelAlign())) {
+                run.setX(this.getX());
+            } else if (Align.isCenterHorizontal(run.getLabelAlign())) {
+                run.setX(this.getX() + (this.getWidth() - run.getMinWidth()) / 2);
+            } else if (Align.isRight(run.getLabelAlign())) {
+                run.setX(this.getX() + this.getWidth() - run.getMinWidth());
+            }
+            run.setY(this.getY() + relY);
+
+            run.getFontStyle().getColor().a = MathUtils.clamp(relY / this.getHeight(), 0F, 0.75F) * 1.25F;
+            if (((FontStyleMarkerInterface) (Object) run.getFontStyle()).s2dmenues$useShadow()) {
+                run.getFontStyle().getShadowColor().a = MathUtils.clamp(relY / this.getHeight(), 0F, 0.5F) * 0.8F;
+            }
+            if (((FontStyleMarkerInterface) (Object) run.getFontStyle()).s2dmenues$useInnerShadow()) {
+                run.getFontStyle().getInnerShadowColor().a = MathUtils.clamp(relY / this.getHeight(), 0F, 0.5F) * 0.8F;
+            }
+
+            run.draw(batch, parentAlpha);
+            relY -= run.getPrefHeight();
+        }
+
+        if (relY > this.getHeight() + 10) {
+            this.horizontalScroll = -10;
+        }
+
+        this.horizontalScroll += 0.2F;
     }
 
     @Override
@@ -127,43 +168,5 @@ public class MSDFScrollingTextWidget extends Widget {
         this.invalidateHierarchy();
 
         return this;
-    }
-
-    @Override
-    public void draw(Batch batch, float parentAlpha) {
-        batch = Objects.requireNonNull(batch, "argument 'batch' may not be null.");
-        super.draw(batch, parentAlpha);
-
-        float relY = this.horizontalScroll;
-
-        batch.flush();
-        for (MsdfLabel run : this.runs) {
-            if (Align.isLeft(run.getLabelAlign())) {
-                run.setX(this.getX());
-            } else if (Align.isCenterHorizontal(run.getLabelAlign())) {
-                run.setX(this.getX() + (this.getWidth() - run.getMinWidth()) / 2);
-            } else if (Align.isRight(run.getLabelAlign())) {
-                run.setX(this.getX() + this.getWidth() - run.getWidth());
-            }
-            run.setY(this.getY() + relY);
-
-            run.getFontStyle().getColor().a = MathUtils.clamp(relY / this.getHeight(), 0F, 0.75F) * 1.25F;
-            if (((FontStyleMarkerInterface) (Object) run.getFontStyle()).s2dmenues$useShadow()) {
-                run.getFontStyle().getShadowColor().a = MathUtils.clamp(relY / this.getHeight(), 0F, 0.5F) * 0.8F;
-            }
-            if (((FontStyleMarkerInterface) (Object) run.getFontStyle()).s2dmenues$useInnerShadow()) {
-                run.getFontStyle().getInnerShadowColor().a = MathUtils.clamp(relY / this.getHeight(), 0F, 0.5F) * 0.8F;
-            }
-
-            run.draw(batch, parentAlpha);
-            relY -= run.getPrefHeight();
-        }
-
-        if (relY > this.getHeight() + 10) {
-            this.horizontalScroll = -10;
-        }
-
-        batch.flush();
-        this.horizontalScroll += 0.2F;
     }
 }
