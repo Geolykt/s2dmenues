@@ -32,7 +32,6 @@ public class FullViewportDrawable extends BaseDrawable {
 
         Gdx.gl.glGetIntegerv(GL20.GL_VIEWPORT, viewport);
 
-        viewport.rewind();
         int viewportX = viewport.get(0);
         int viewportY = viewport.get(1);
         int viewportW = viewport.get(2);
