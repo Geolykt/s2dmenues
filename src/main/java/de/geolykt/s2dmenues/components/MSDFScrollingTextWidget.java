@@ -8,6 +8,7 @@ import java.util.Objects;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Colors;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -52,10 +53,6 @@ public class MSDFScrollingTextWidget extends Widget {
 
         float relY = this.horizontalScroll;
 
-//        batch.setColor(Color.DARK_GRAY.r, Color.DARK_GRAY.g, Color.DARK_GRAY.b, 1F * parentAlpha);
-//        batch.draw(Drawing.getTextureProvider().getSinglePixelSquare(), this.getX(), this.getY(), this.getWidth(), this.getHeight());
-//        batch.setColor(Color.WHITE);
-
         for (MsdfLabel run : this.runs) {
             if (Align.isLeft(run.getLabelAlign())) {
                 run.setX(this.getX());
@@ -66,7 +63,8 @@ public class MSDFScrollingTextWidget extends Widget {
             }
             run.setY(this.getY() + relY);
 
-            run.getFontStyle().getColor().a = MathUtils.clamp(relY / this.getHeight(), 0F, 0.75F) * 1.25F;
+            run.getFontStyle().getColor().a = MathUtils.clamp(relY / this.getHeight(), 0F, 0.5F) * 2F;
+            run.getFontStyle().getColor().a = ((int) Math.round(run.getFontStyle().getColor().a * 8F)) / 8F;
             if (((FontStyleMarkerInterface) (Object) run.getFontStyle()).s2dmenues$useShadow()) {
                 run.getFontStyle().getShadowColor().a = MathUtils.clamp(relY / this.getHeight(), 0F, 0.5F) * 0.8F;
             }
@@ -82,7 +80,7 @@ public class MSDFScrollingTextWidget extends Widget {
             this.horizontalScroll = -10;
         }
 
-        this.horizontalScroll += 0.2F;
+        this.horizontalScroll += Gdx.graphics.getRawDeltaTime() * 20;
     }
 
     @Override

@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -22,8 +23,10 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Container;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
 import com.badlogic.gdx.scenes.scene2d.ui.Widget;
@@ -161,16 +164,19 @@ public class MainMenuProvider {
         } catch (IOException e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
-            creditsMessage = "\\centerjustify \\fontsize=1.5 \\shadowcolor=WHITE s2dmenues is a mod for galimulator written by geolykt.\nError: Couldn't read credits file:\n" + sw.toString().replace("\t", "    ");
+            creditsMessage = "\\centerjustify \\fontsize=1.5 \\shadowcolor=BLACK s2dmenues is a mod for galimulator written by geolykt.\nError: Couldn't read credits file:\n" + sw.toString().replace("\t", "    ");
         }
 
-        FontStyle creditsFontStyle = Styles.getInstance().getMSDFFontStyle();
-        Widget creditsWidget = new MSDFScrollingTextWidget(Styles.getInstance().msdfFont, creditsFontStyle, Styles.getInstance().msdfShader, creditsMessage);
-        creditsWidget.setWidth(400F);
+        FontStyle creditsFontStyle = new FontStyle(Styles.getInstance().getMSDFFontStyle());
+        creditsFontStyle.setColor(Objects.requireNonNull(Color.WHITE, "Color.WHITE == null"));
+        Container<?> creditsContainer = new Container<>(new MSDFScrollingTextWidget(Styles.getInstance().msdfFont, creditsFontStyle, Styles.getInstance().msdfShader, creditsMessage)).fillY();
+        creditsContainer.background(TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(0x808080A7), 0.66F));
+        creditsContainer.setClip(true);
+        creditsContainer.pad(10F);
 
         Dialog mainMenuItemsWindow = new Dialog("", Styles.getInstance().windowStyleMainMenu);
         mainMenuItemsWindow.getContentTable().add(buttons).pad(15F);
-        mainMenuItemsWindow.getContentTable().add(creditsWidget).fillY();
+        mainMenuItemsWindow.getContentTable().add(creditsContainer).fillY().pad(15F);
         mainMenuItemsWindow.getTitleLabel().remove();
         mainMenuItemsWindow.setResizable(true);
         mainMenuItemsWindow.setResizeBorder(30);
