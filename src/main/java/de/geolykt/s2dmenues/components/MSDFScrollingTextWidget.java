@@ -22,7 +22,6 @@ import com.maltaisn.msdfgdx.MsdfShader;
 import com.maltaisn.msdfgdx.widget.MsdfLabel;
 
 import de.geolykt.s2dmenues.bridge.FontStyleMarkerInterface;
-import de.geolykt.starloader.api.gui.Drawing;
 
 public class MSDFScrollingTextWidget extends Widget {
 
@@ -101,7 +100,7 @@ public class MSDFScrollingTextWidget extends Widget {
         int align = Align.left;
         FontStyle style = new FontStyle(this.msdfFontStyle);
 
-        while (line.codePointAt(0) == '\\') {
+        while (!line.isEmpty() && line.codePointAt(0) == '\\') {
             if (line.startsWith("\\rightjustify ")) {
                 line = line.substring("\\rightjustify ".length());
                 align = Align.right;
@@ -135,6 +134,10 @@ public class MSDFScrollingTextWidget extends Widget {
             } else {
                 break;
             }
+        }
+
+        if (line.isEmpty()) {
+            line = " ";
         }
 
         MsdfLabel label = new MsdfLabel(line, skin, style);
