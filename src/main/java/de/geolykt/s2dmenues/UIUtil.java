@@ -30,7 +30,7 @@ public class UIUtil {
     @NotNull
     public static TextButton createTextInputButton(@NotNull String description, @NotNull Supplier<@NotNull String> currentValueSupplier, @NotNull Consumer<@NotNull String> currentValueSetter) {
         return new MSDFTextButton(description + " [GRAY](" + currentValueSupplier.get() + ")[]", Styles.getInstance().buttonStyle, (textButton) -> {
-            UIUtil.showInputDialog(Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), value -> {
+            UIUtil.showInputDialog(description, Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), value -> {
                 currentValueSetter.accept(value);
                 textButton.setText(description + " [GRAY](" + currentValueSupplier.get() + ")[]");
             }, currentValueSupplier.get());
@@ -40,7 +40,7 @@ public class UIUtil {
     @NotNull
     public static TextButton createFloatInputButton(@NotNull String description, @NotNull FloatSupplier currentValueSupplier, @NotNull FloatConsumer currentValueSetter) {
         return new MSDFTextButton(description + " [GRAY](" + currentValueSupplier.getAsFloat() + ")[]", Styles.getInstance().buttonStyle, (textButton) -> {
-            UIUtil.showInputDialogFloat(Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), value -> {
+            UIUtil.showInputDialogFloat(description, Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), value -> {
                 currentValueSetter.accept(value);
                 textButton.setText(description + " [GRAY](" + currentValueSupplier.getAsFloat() + ")[]");
             });
@@ -50,15 +50,15 @@ public class UIUtil {
     @NotNull
     public static TextButton createUnsignedIntInputButton(@NotNull String description, @NotNull IntSupplier currentValueSupplier, @NotNull IntConsumer currentValueSetter) {
         return new MSDFTextButton(description + " [GRAY](" + currentValueSupplier.getAsInt() + ")[]", Styles.getInstance().buttonStyle, (textButton) -> {
-            UIUtil.showInputDialogUnsignedInt(Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), value -> {
+            UIUtil.showInputDialogUnsignedInt(description, Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), value -> {
                 currentValueSetter.accept(value);
                 textButton.setText(description + " [GRAY](" + currentValueSupplier.getAsInt() + ")[]");
             });
         });
     }
 
-    public static void showInputDialog(@NotNull Stage stage, @NotNull Consumer<@NotNull String> onAccept, @NotNull String defaultInputValue) {
-        Dialog setCountdialog = new Dialog("Set planet count", Styles.getInstance().windowStylePlastic);
+    public static void showInputDialog(@NotNull String title, @NotNull Stage stage, @NotNull Consumer<@NotNull String> onAccept, @NotNull String defaultInputValue) {
+        Dialog setCountdialog = new Dialog(title, Styles.getInstance().windowStylePlastic);
         TextField inputField = new TextField(defaultInputValue, Styles.getInstance().textFieldStyle);
         Actor dialogCancel = new RunnableTextButton("Cancel", Styles.getInstance().cancelButtonStyle, (Runnable) setCountdialog::hide);
         Actor dialogConfirm = new RunnableTextButton("Confirm", Styles.getInstance().confirmButtonStyle, () -> {
@@ -73,12 +73,12 @@ public class UIUtil {
         stage.setKeyboardFocus(inputField);
     }
 
-    public static void showInputDialog(@NotNull Stage stage, @NotNull Consumer<@NotNull String> onAccept) {
-        UIUtil.showInputDialog(stage, onAccept, "");
+    public static void showInputDialog(@NotNull String title, @NotNull Stage stage, @NotNull Consumer<@NotNull String> onAccept) {
+        UIUtil.showInputDialog(title, stage, onAccept, "");
     }
 
-    public static void showInputDialogUnsignedInt(@NotNull Stage stage, @NotNull IntConsumer onAccept) {
-        UIUtil.showInputDialog(stage, (text) -> {
+    public static void showInputDialogUnsignedInt(@NotNull String title, @NotNull Stage stage, @NotNull IntConsumer onAccept) {
+        UIUtil.showInputDialog(title, stage, (text) -> {
             try {
                 if (!text.isEmpty()) { // Make no text behave like a no-op
                     onAccept.accept(Integer.parseUnsignedInt(text));
@@ -93,8 +93,8 @@ public class UIUtil {
         });
     }
 
-    public static void showInputDialogFloat(@NotNull Stage stage, @NotNull FloatConsumer onAccept) {
-        UIUtil.showInputDialog(stage, (text) -> {
+    public static void showInputDialogFloat(@NotNull String title, @NotNull Stage stage, @NotNull FloatConsumer onAccept) {
+        UIUtil.showInputDialog(title, stage, (text) -> {
             try {
                 if (!text.isEmpty()) { // Make no text be like no operation
                     onAccept.accept(Float.parseFloat(text));
