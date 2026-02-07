@@ -69,7 +69,7 @@ public class MSDFScrollingTextWidget extends Widget {
             this.deltaTime = System.nanoTime();
         } else {
             long currentTime = System.nanoTime();
-            this.horizontalScroll += (currentTime - this.deltaTime) * 20e-9;
+            this.horizontalScroll += (currentTime - this.deltaTime) * 20e-9F;
             this.deltaTime = currentTime;
         }
     }

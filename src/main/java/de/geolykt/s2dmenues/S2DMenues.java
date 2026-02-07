@@ -1,9 +1,13 @@
 package de.geolykt.s2dmenues;
 
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.LoggerFactory;
 
 import com.badlogic.gdx.Gdx;
 
+import net.minestom.server.extras.selfmodification.MinestomRootClassLoader;
+
+import de.geolykt.s2dmenues.asm.TextraMASMTransformer;
 import de.geolykt.starloader.api.event.EventHandler;
 import de.geolykt.starloader.api.event.EventManager;
 import de.geolykt.starloader.api.event.EventPriority;
@@ -38,5 +42,12 @@ public class S2DMenues extends Extension {
                 }
             }
         });
+    }
+
+    static {
+        if (com.badlogic.gdx.Version.isLower(1, 14, 0)) {
+            LoggerFactory.getLogger(S2DMenues.class).info("The runtime version of libGDX is out of date. Using Mass ASM for compatibility.");
+            MinestomRootClassLoader.getInstance().addASMTransformer(new TextraMASMTransformer());
+        }
     }
 }

@@ -3,3 +3,5 @@
 The worst mod everyone asked for.
 
 Developed for galimulator 5.0.2
+
+Requires SLL 4.0.0-a20250819 or newer
