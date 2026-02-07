@@ -1,10 +1,18 @@
 package de.geolykt.s2dmenues;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.slf4j.LoggerFactory;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -16,10 +24,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Disposable;
 import com.github.tommyettinger.textra.Font;
+import com.github.tommyettinger.textra.Font.DistanceFieldType;
 import com.github.tommyettinger.textra.Styles.TextButtonStyle;
 
 import de.geolykt.s2dmenues.components.FullViewportDrawable;
 import de.geolykt.starloader.api.gui.Drawing;
+import de.geolykt.starloader.api.resource.NIOFileHandle;
 
 public class Styles implements Disposable {
 
@@ -58,26 +68,62 @@ public class Styles implements Disposable {
     @NotNull
     public final WindowStyle windowStyleTranslucent;
 
-    private Styles() {
+    @NotNull
+    private static Font loadFont() throws IOException {
+        Path fontConfig = S2DMenues.MOD_DATA_DIR.resolve("font-config.json");
 
-        // MONOTYPE_BIG is another alternative
-        //BitmapFont msdfBMPFont = Objects.requireNonNull(Drawing.getFontBitmap("SPACE"), "The requested font could not be not found");
-        BitmapFont msdfBMPFont = Drawing.getSpaceFont();
-        this.msdfFont = new Font(msdfBMPFont); // FIXME HIGHLY INAPPROPRIATE
-
-        {
-            this.buttonStyle = new TextButtonStyle();
-            this.buttonStyle.font = this.msdfFont;
-            this.buttonStyle.up = TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(0xFE5B3EFF), 0.66F);
-            this.buttonStyle.up.setMinWidth(300F);
-            this.buttonStyle.over = TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(0xFF3814FF), 0.75F);
-            this.buttonStyle.over.setMinWidth(300F);
-            this.buttonStyle.down = TextureCache.getInstance().getGradientWindowTenpatch(true, new Color(0x487C9AFF), 0.5F);
-            this.buttonStyle.down.setMinWidth(300F);
-            this.buttonStyle.disabled = TextureCache.getInstance().getGradientWindowTenpatch(true, new Color(0x487C9AFF), 0.5F);
-            this.buttonStyle.disabled.setMinWidth(300F);
+        if (Files.notExists(fontConfig)) {
+            LoggerFactory.getLogger(Styles.class).warn("Font configuration file '{}' is absent. Falling back to default font configurations.", fontConfig);
+            return new Font(Drawing.getSpaceFont());
         }
 
+        JSONObject configObject;
+
+        try {
+            configObject = new JSONObject(new String(Files.readAllBytes(fontConfig), StandardCharsets.UTF_8));
+        } catch (JSONException e) {
+            throw new IOException("Failure to deserialize the font-config.json file", e);
+        }
+
+        DistanceFieldType distanceField = configObject.optEnum(DistanceFieldType.class, "distanceField", DistanceFieldType.STANDARD);
+        float xAdjust = configObject.optFloat("xAdjust", 0);
+        float yAdjust = configObject.optFloat("yAdjust", 0);
+        float widthAdjust = configObject.optFloat("widthAdjust", 0);
+        float heightAdjust = configObject.optFloat("heightAdjust", 0);
+        boolean makeGridGlyphs = configObject.optBoolean("makeGridGlyphs", false);
+
+        Path bmFontPath = S2DMenues.MOD_DATA_DIR.resolve(Objects.requireNonNull(configObject.getString("fntPath")));
+
+        if (Files.notExists(bmFontPath)) {
+            throw new IOException("The font configuration file binds 'fntPath' to '" + bmFontPath.toAbsolutePath().toString() + "' but no such file exists.");
+        }
+
+        BitmapFont bmFont = new BitmapFont(new NIOFileHandle(bmFontPath)); // TODO Bind font onto the main texture atlas
+
+        Font font = new Font(bmFont, distanceField, xAdjust, yAdjust, widthAdjust, heightAdjust, makeGridGlyphs);
+
+        font.scale(configObject.optFloat("scale", 1.0F));
+
+        return font;
+    }
+
+    private Styles() {
+        try {
+            this.msdfFont = Styles.loadFont();
+        } catch (IOException e) {
+            throw new UncheckedIOException("Unable to load default font", e);
+        }
+
+        this.buttonStyle = new TextButtonStyle();
+        this.buttonStyle.font = this.msdfFont;
+        this.buttonStyle.up = TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(0xFE5B3EFF), 0.66F);
+        this.buttonStyle.up.setMinWidth(300F);
+        this.buttonStyle.over = TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(0xFF3814FF), 0.75F);
+        this.buttonStyle.over.setMinWidth(300F);
+        this.buttonStyle.down = TextureCache.getInstance().getGradientWindowTenpatch(true, new Color(0x487C9AFF), 0.5F);
+        this.buttonStyle.down.setMinWidth(300F);
+        this.buttonStyle.disabled = TextureCache.getInstance().getGradientWindowTenpatch(true, new Color(0x487C9AFF), 0.5F);
+        this.buttonStyle.disabled.setMinWidth(300F);
         this.cancelButtonStyle = new TextButtonStyle();
         this.cancelButtonStyle.font = this.msdfFont;
         this.cancelButtonStyle.fontColor = Color.WHITE;

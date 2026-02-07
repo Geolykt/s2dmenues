@@ -32,6 +32,7 @@ public class CanvasWrappingActor extends Widget {
     @NotNull
     private final Canvas canvas;
 
+    @Deprecated
     public CanvasWrappingActor(@NotNull Canvas canvas) {
         if (canvas instanceof MultiCanvas) {
             throw new IllegalArgumentException("Multi-canvases are not supported yet.");
@@ -41,11 +42,13 @@ public class CanvasWrappingActor extends Widget {
         this.ctx = canvas.getContext();
     }
 
+    @Deprecated
     @Override
     public float getPrefHeight() {
         return this.getHeightI();
     }
 
+    @Deprecated
     @Override
     public float getPrefWidth() {
         return this.ctx.getWidth();
@@ -59,6 +62,7 @@ public class CanvasWrappingActor extends Widget {
         }
     }
 
+    @Deprecated
     @Override
     public void draw(Batch batch, float parentAlpha) {
         this.validate();

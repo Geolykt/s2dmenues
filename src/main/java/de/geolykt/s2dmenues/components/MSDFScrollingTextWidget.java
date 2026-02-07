@@ -54,8 +54,8 @@ public class MSDFScrollingTextWidget extends Widget {
 
             run.setY(this.getY() + relY);
 
-            run.style.fontColor.a = MathUtils.clamp(relY / this.getHeight(), 0F, 0.5F) * 2F;
-            run.style.fontColor.a = ((int) Math.round(run.style.fontColor.a * 8F)) / 8F;
+            run.getColor().a = MathUtils.clamp(relY / this.getHeight(), 0F, 0.5F) * 2F;
+            run.getColor().a = ((int) Math.round(run.getColor().a * 8F)) / 8F;
 
             run.draw(batch, parentAlpha);
             relY -= run.getPrefHeight();

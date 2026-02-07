@@ -1,5 +1,7 @@
 package de.geolykt.s2dmenues;
 
+import java.nio.file.Path;
+
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.LoggerFactory;
 
@@ -8,6 +10,7 @@ import com.badlogic.gdx.Gdx;
 import net.minestom.server.extras.selfmodification.MinestomRootClassLoader;
 
 import de.geolykt.s2dmenues.asm.TextraMASMTransformer;
+import de.geolykt.starloader.Starloader;
 import de.geolykt.starloader.api.event.EventHandler;
 import de.geolykt.starloader.api.event.EventManager;
 import de.geolykt.starloader.api.event.EventPriority;
@@ -17,6 +20,9 @@ import de.geolykt.starloader.api.event.lifecycle.ApplicationStopEvent;
 import de.geolykt.starloader.mod.Extension;
 
 public class S2DMenues extends Extension {
+
+    @NotNull
+    public static final Path MOD_DATA_DIR = Starloader.getInstance().getModDirectory().resolve("s2dmenues");
 
     @Override
     public void initialize() {

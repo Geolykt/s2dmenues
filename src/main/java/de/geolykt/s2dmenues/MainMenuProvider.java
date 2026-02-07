@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -40,11 +41,9 @@ import de.geolykt.s2dmenues.components.RunnableTextraButton;
 import de.geolykt.s2dmenues.components.S2DSavegameBrowser;
 import de.geolykt.s2dmenues.components.TextDrawable;
 import de.geolykt.starloader.api.Galimulator;
-import de.geolykt.starloader.api.NullUtils;
 import de.geolykt.starloader.api.gui.Drawing;
 import de.geolykt.starloader.api.gui.openui.PathSavegame;
 import de.geolykt.starloader.api.gui.openui.Savegame;
-import de.geolykt.starloader.api.resource.DataFolderProvider;
 import de.geolykt.starloader.api.utils.TickLoopLock.LockScope;
 import de.geolykt.starloader.impl.GalimulatorImplementation;
 
@@ -68,16 +67,7 @@ public class MainMenuProvider {
     }
 
     private static void display0() {
-        Path parentDir = DataFolderProvider.getProvider().provideAsPath().resolve("mods/s2dmenues");
-        if (Files.notExists(parentDir)) {
-            try {
-                Files.createDirectory(parentDir);
-            } catch (IOException e) {
-                LoggerFactory.getLogger(MainMenuProvider.class).error("Unable to create directory {}. Skipping display of main menu!", parentDir, e);
-                return;
-            }
-        }
-        Path menubg = parentDir.resolve("main-menu-background.png");
+        Path menubg = S2DMenues.MOD_DATA_DIR.resolve("main-menu-background.png");
         String errmsg = null;
         Texture backgroundTexture = null;
 
@@ -109,7 +99,7 @@ public class MainMenuProvider {
             if (errmsg == null) {
                 errmsg = "Assertion failed: Null background texture. No further information available.";
             }
-            backgroundDrawable = new TextDrawable(errmsg, NullUtils.requireNotNull(Color.GREEN));
+            backgroundDrawable = new TextDrawable(errmsg, Objects.requireNonNull(Color.GREEN));
         } else {
             backgroundDrawable = new CroppingTextureDrawable(backgroundTexture, true);
         };
@@ -157,7 +147,7 @@ public class MainMenuProvider {
 
         String creditsMessage;
         try {
-            creditsMessage = new String(Files.readAllBytes(parentDir.resolve("credits.txt")), StandardCharsets.UTF_8);
+            creditsMessage = new String(Files.readAllBytes(S2DMenues.MOD_DATA_DIR.resolve("credits.txt")), StandardCharsets.UTF_8);
         } catch (IOException e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
@@ -244,7 +234,7 @@ public class MainMenuProvider {
     private static void disableAll(Actor a) {
         if (a instanceof Group && !(a instanceof Window)) {
             for (Actor c :((Group) a).getChildren().items) {
-                disableAll(c);
+                MainMenuProvider.disableAll(c);
             }
         }
         if (a instanceof Disableable) {
@@ -255,7 +245,7 @@ public class MainMenuProvider {
     private static void enableAll(Actor a) {
         if (a instanceof Group && !(a instanceof Window)) {
             for (Actor c :((Group) a).getChildren().items) {
-                enableAll(c);
+                MainMenuProvider.enableAll(c);
             }
         }
         if (a instanceof Disableable) {
