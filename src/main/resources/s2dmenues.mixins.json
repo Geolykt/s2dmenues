@@ -5,8 +5,6 @@
   "target": "@env(DEFAULT)",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "FontStyleMixins",
-    "MsdfShaderMixins",
     "PSGMovingCenterMixins",
     "PSGMovingFrameMixins",
     "PSGMovingSpiralMixins"

@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -26,18 +25,18 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Container;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.scenes.scene2d.utils.Disableable;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
-import com.maltaisn.msdfgdx.FontStyle;
+import com.github.tommyettinger.textra.Styles.LabelStyle;
+import com.github.tommyettinger.textra.TextraButton;
 
 import de.geolykt.s2dmenues.components.CroppingTextureDrawable;
 import de.geolykt.s2dmenues.components.GenGalaxyWindow;
 import de.geolykt.s2dmenues.components.MSDFScrollingTextWidget;
-import de.geolykt.s2dmenues.components.MSDFTextButton;
 import de.geolykt.s2dmenues.components.NOPActor;
+import de.geolykt.s2dmenues.components.RunnableTextraButton;
 import de.geolykt.s2dmenues.components.S2DSavegameBrowser;
 import de.geolykt.s2dmenues.components.TextDrawable;
 import de.geolykt.starloader.api.Galimulator;
@@ -123,11 +122,11 @@ public class MainMenuProvider {
         // the galaxy generation window. Though it probably could be all static variables instead - who knows?
         AtomicReference<GenGalaxyWindow> genGalaxyWindow = new AtomicReference<>();
 
-        TextButton exit = new MSDFTextButton("Exit game", Styles.getInstance().buttonStyle, Gdx.app::exit);
-        TextButton load = new MSDFTextButton("Load galaxy", Styles.getInstance().buttonStyle, () -> {
+        TextraButton exit = new RunnableTextraButton("Exit game", Styles.getInstance().buttonStyle, Gdx.app::exit);
+        TextraButton load = new RunnableTextraButton("Load galaxy", Styles.getInstance().buttonStyle, () -> {
             MainMenuProvider.displayLoadMenu(stage);
         });
-        TextButton newG = new MSDFTextButton("New galaxy", Styles.getInstance().buttonStyle, () -> {
+        TextraButton newG = new RunnableTextraButton("New galaxy", Styles.getInstance().buttonStyle, () -> {
             MainMenuProvider.disableAll(stage.getRoot());
             GenGalaxyWindow window = genGalaxyWindow.get();
             if (window == null) {
@@ -141,7 +140,7 @@ public class MainMenuProvider {
             }
             window.show(stage);
         });
-        TextButton continueG = new MSDFTextButton("Continue galaxy", Styles.getInstance().buttonStyle, () -> {
+        RunnableTextraButton continueG = new RunnableTextraButton("Continue galaxy", Styles.getInstance().buttonStyle, () -> {
             Drawing.setShownStage(null);
         });
 
@@ -162,12 +161,11 @@ public class MainMenuProvider {
         } catch (IOException e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
-            creditsMessage = "\\centerjustify \\fontsize=1.5 \\shadowcolor=BLACK s2dmenues is a mod for galimulator written by geolykt.\nError: Couldn't read credits file:\n" + sw.toString().replace("\t", "    ");
+            creditsMessage = "\\centerjustify \\fontsize=1.5 s2dmenues is a mod for galimulator written by geolykt.\nError: Couldn't read credits file:\n" + sw.toString().replace("\t", "    ");
         }
 
-        FontStyle creditsFontStyle = new FontStyle(Styles.getInstance().getMSDFFontStyle());
-        creditsFontStyle.setColor(Objects.requireNonNull(Color.WHITE, "Color.WHITE == null"));
-        Container<?> creditsContainer = new Container<>(new MSDFScrollingTextWidget(Styles.getInstance().msdfFont, creditsFontStyle, Styles.getInstance().msdfShader, creditsMessage)).fillY();
+        LabelStyle creditsLabelStyle = new LabelStyle(Styles.getInstance().getMSDFFont(), Color.WHITE.cpy());
+        Container<?> creditsContainer = new Container<>(new MSDFScrollingTextWidget(creditsLabelStyle, creditsMessage)).fillY();
         creditsContainer.background(TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(0x808080A7), 0.66F));
         creditsContainer.setClip(true);
         creditsContainer.pad(10F);
@@ -190,7 +188,7 @@ public class MainMenuProvider {
         MainMenuProvider.disableAll(stage.getRoot());
 
         Dialog dialog = new Dialog("Load savegame", Styles.getInstance().windowStyleTranslucent);
-        TextButton close = new TextButton("Close", Styles.getInstance().cancelButtonStyle);
+        TextraButton close = new TextraButton("Close", Styles.getInstance().cancelButtonStyle);
         S2DSavegameBrowser browser = new S2DSavegameBrowser(savegame -> {
             if (!(savegame instanceof PathSavegame)) {
                 // Not part of the official API. I should really expose that method one of these days given of how useful it is

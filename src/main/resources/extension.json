@@ -35,14 +35,13 @@
                     "com.badlogicgames.gdx:gdx"
                 ]
             }, {
-                "group": "com.maltaisn",
-                "artifact": "msdf-gdx",
-                "version": "${msdfVersion}",
+                "group": "com.github.tommyettinger",
+                "artifact": "textratypist",
+                "version": "${textraTypistVersion}",
                 "exclusions": [
-                    "com.badlogicgames.gdx:gdx",
-                    "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+                    "com.badlogicgames.gdx:gdx"
                 ]
-            }
+            },
         ]
     }
 }

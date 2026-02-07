@@ -11,17 +11,14 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Disposable;
-import com.maltaisn.msdfgdx.FontStyle;
-import com.maltaisn.msdfgdx.MsdfFont;
-import com.maltaisn.msdfgdx.MsdfShader;
+import com.github.tommyettinger.textra.Font;
+import com.github.tommyettinger.textra.Styles.TextButtonStyle;
 
 import de.geolykt.s2dmenues.components.FullViewportDrawable;
-import de.geolykt.s2dmenues.components.MSDFTextButton.MSDFButtonStyle;
 import de.geolykt.starloader.api.gui.Drawing;
 
 public class Styles implements Disposable {
@@ -39,7 +36,7 @@ public class Styles implements Disposable {
     }
 
     @NotNull
-    public final MSDFButtonStyle buttonStyle;
+    public final TextButtonStyle buttonStyle;
     @NotNull
     public final TextButtonStyle cancelButtonStyle;
     @NotNull
@@ -47,11 +44,7 @@ public class Styles implements Disposable {
     @NotNull
     public final LabelStyle labelStyleGeneric;
     @NotNull
-    public final MsdfFont msdfFont;
-    @NotNull
-    private final FontStyle msdfFontStyleBase;
-    @NotNull
-    public final MsdfShader msdfShader;
+    public final Font msdfFont;
     @NotNull
     public final ScrollPaneStyle scrollPaneStyle;
     @NotNull
@@ -68,15 +61,13 @@ public class Styles implements Disposable {
     private Styles() {
 
         // MONOTYPE_BIG is another alternative
-        BitmapFont msdfBMPFont = Objects.requireNonNull(Drawing.getFontBitmap("SPACE"), "The requested font could not be not found");
-        this.msdfFont = new MsdfFont(msdfBMPFont, msdfBMPFont.getLineHeight(), 1F);
-        this.msdfShader = new MsdfShader();
-        this.msdfFontStyleBase = new FontStyle();
-        this.msdfFontStyleBase.setSize(this.msdfFont.getGlyphSize());
+        //BitmapFont msdfBMPFont = Objects.requireNonNull(Drawing.getFontBitmap("SPACE"), "The requested font could not be not found");
+        BitmapFont msdfBMPFont = Drawing.getSpaceFont();
+        this.msdfFont = new Font(msdfBMPFont); // FIXME HIGHLY INAPPROPRIATE
 
         {
-            this.buttonStyle = new MSDFButtonStyle(this.msdfFont, this.getMSDFFontStyle());
-            this.buttonStyle.fontStyleUp.setColor(Objects.requireNonNull(Color.WHITE));
+            this.buttonStyle = new TextButtonStyle();
+            this.buttonStyle.font = this.msdfFont;
             this.buttonStyle.up = TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(0xFE5B3EFF), 0.66F);
             this.buttonStyle.up.setMinWidth(300F);
             this.buttonStyle.over = TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(0xFF3814FF), 0.75F);
@@ -88,7 +79,7 @@ public class Styles implements Disposable {
         }
 
         this.cancelButtonStyle = new TextButtonStyle();
-        this.cancelButtonStyle.font = Drawing.getSpaceFont();
+        this.cancelButtonStyle.font = this.msdfFont;
         this.cancelButtonStyle.fontColor = Color.WHITE;
         this.cancelButtonStyle.up = TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(0xAF2020FF), 0.5F);
         this.cancelButtonStyle.up.setMinWidth(300F);
@@ -100,7 +91,7 @@ public class Styles implements Disposable {
         this.cancelButtonStyle.disabled.setMinWidth(300F);
 
         this.confirmButtonStyle = new TextButtonStyle();
-        this.confirmButtonStyle.font = Drawing.getSpaceFont();
+        this.confirmButtonStyle.font = this.msdfFont;
         this.confirmButtonStyle.fontColor = Color.WHITE;
         this.confirmButtonStyle.up = TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(0x20AF20FF), 0.5F);
         this.confirmButtonStyle.up.setMinWidth(300F);
@@ -157,13 +148,13 @@ public class Styles implements Disposable {
     public void dispose() {
         if (this == Styles.instance) {
             Styles.instance = null;
-            this.msdfShader.dispose();
+            this.msdfFont.dispose(); // We only need to dispose once so we shouldn't have any memory leaks with copies allocated with #getMSDFFont
         }
     }
 
     @NotNull
     @Contract(pure = true)
-    public final FontStyle getMSDFFontStyle() {
-        return new FontStyle(this.msdfFontStyleBase);
+    public final Font getMSDFFont() {
+        return new Font(this.msdfFont);
     }
 }

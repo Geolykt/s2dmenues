@@ -13,10 +13,9 @@ import org.jetbrains.annotations.NotNull;
 
 import com.badlogic.gdx.scenes.scene2d.ui.Container;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
+import com.github.tommyettinger.textra.TextraButton;
 
-import de.geolykt.s2dmenues.RunnableClickListener;
 import de.geolykt.s2dmenues.Styles;
 import de.geolykt.starloader.api.gui.openui.Savegame;
 
@@ -59,11 +58,10 @@ public class S2DSavegameBrowser extends Container<ScrollPane> {
         String timestamp = DateTimeFormatter.RFC_1123_DATE_TIME.format(timestampTime);
 
         String text = savegame.getDisplayName() + "\n" + timestamp + "\n[GRAY]" +  savegame.getSavagameFormat() + " (" + savegame.getGalimulatorVersion() + ")[]";
-        TextButton button = new TextButton(text, Styles.getInstance().buttonStyle);
-        button.setHeight(80F);
-        button.addListener(new RunnableClickListener(() -> {
+        TextraButton button = new RunnableTextraButton(text, Styles.getInstance().buttonStyle, () -> {
             this.consumer.accept(savegame);
-        }));
+        });
+        button.setHeight(80F);
         this.buttons.addActor(button);
         return this;
     }
