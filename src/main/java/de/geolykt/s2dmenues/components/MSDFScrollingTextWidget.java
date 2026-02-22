@@ -14,6 +14,9 @@ import com.badlogic.gdx.scenes.scene2d.ui.Widget;
 import com.badlogic.gdx.utils.Align;
 import com.github.tommyettinger.textra.Font;
 import com.github.tommyettinger.textra.Styles.LabelStyle;
+
+import de.geolykt.s2dmenues.FontConfig;
+
 import com.github.tommyettinger.textra.TextraLabel;
 
 public class MSDFScrollingTextWidget extends Widget {
@@ -42,21 +45,13 @@ public class MSDFScrollingTextWidget extends Widget {
         float relY = this.horizontalScroll;
 
         for (TextraLabel run : this.runs) {
-            int align = run.getAlignment();
-
-            if (Align.isLeft(align)) {
-                run.setX(this.getX());
-            } else if (Align.isCenterHorizontal(align)) {
-                run.setX(this.getX() + (this.getWidth() - run.getMinWidth()) / 2);
-            } else if (Align.isRight(align)) {
-                run.setX(this.getX() + this.getWidth() - run.getMinWidth());
-            }
-
+            run.setWidth(this.preferredWidth);
+            run.wrap = true;
+            run.setX(this.getX());
             run.setY(this.getY() + relY);
-
             run.getColor().a = MathUtils.clamp(relY / this.getHeight(), 0F, 0.5F) * 2F;
             run.getColor().a = ((int) Math.round(run.getColor().a * 8F)) / 8F;
-
+            run.setFont(FontConfig.getInstance().getPreferredFont(), true);
             run.draw(batch, parentAlpha);
             relY -= run.getPrefHeight();
         }

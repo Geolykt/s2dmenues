@@ -33,13 +33,14 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.github.tommyettinger.textra.Styles.LabelStyle;
 import com.github.tommyettinger.textra.TextraButton;
 
+import de.geolykt.s2dmenues.components.ConfigurationWindow;
 import de.geolykt.s2dmenues.components.CroppingTextureDrawable;
 import de.geolykt.s2dmenues.components.GenGalaxyWindow;
 import de.geolykt.s2dmenues.components.MSDFScrollingTextWidget;
 import de.geolykt.s2dmenues.components.NOPActor;
 import de.geolykt.s2dmenues.components.RunnableTextraButton;
 import de.geolykt.s2dmenues.components.S2DSavegameBrowser;
-import de.geolykt.s2dmenues.components.TextDrawable;
+import de.geolykt.s2dmenues.components.MSDFTextDrawable;
 import de.geolykt.starloader.api.Galimulator;
 import de.geolykt.starloader.api.gui.Drawing;
 import de.geolykt.starloader.api.gui.openui.PathSavegame;
@@ -95,14 +96,15 @@ public class MainMenuProvider {
         }
 
         Drawable backgroundDrawable;
+
         if (backgroundTexture == null) {
             if (errmsg == null) {
                 errmsg = "Assertion failed: Null background texture. No further information available.";
             }
-            backgroundDrawable = new TextDrawable(errmsg, Objects.requireNonNull(Color.GREEN));
+            backgroundDrawable = new MSDFTextDrawable(errmsg, Objects.requireNonNull(Color.GREEN));
         } else {
             backgroundDrawable = new CroppingTextureDrawable(backgroundTexture, true);
-        };
+        }
 
         MainMenuStage stage = new MainMenuStage(backgroundDrawable, true);
 
@@ -111,6 +113,7 @@ public class MainMenuProvider {
         // Keep a reference to the galaxy generation window in order to avoid settings getting reset when reopening
         // the galaxy generation window. Though it probably could be all static variables instead - who knows?
         AtomicReference<GenGalaxyWindow> genGalaxyWindow = new AtomicReference<>();
+        AtomicReference<ConfigurationWindow> configWindow = new AtomicReference<>();
 
         TextraButton exit = new RunnableTextraButton("Exit game", Styles.getInstance().buttonStyle, Gdx.app::exit);
         TextraButton load = new RunnableTextraButton("Load galaxy", Styles.getInstance().buttonStyle, () -> {
@@ -133,12 +136,28 @@ public class MainMenuProvider {
         RunnableTextraButton continueG = new RunnableTextraButton("Continue galaxy", Styles.getInstance().buttonStyle, () -> {
             Drawing.setShownStage(null);
         });
+        RunnableTextraButton configButton = new RunnableTextraButton("Options", Styles.getInstance().buttonStyle, () -> {
+            LoggerFactory.getLogger(MainMenuProvider.class).info("Opening options menu");
+            MainMenuProvider.disableAll(stage.getRoot());
+            ConfigurationWindow window = configWindow.get();
+            if (window == null) {
+                window = new ConfigurationWindow();
+                window.addCloseAction(() -> {
+                    MainMenuProvider.enableAll(stage.getRoot());
+                });
+                window.pack();
+                configWindow.lazySet(window);
+            }
+            window.show(stage);
+            window.setBounds(16F, 16F, stage.getWidth() - 32F, stage.getHeight() - 32F);
+        });
 
         buttons.setWidth(300F);
 
         buttons.addActor(continueG);
         buttons.addActor(newG);
         buttons.addActor(load);
+        buttons.addActor(configButton);
         buttons.addActor(exit);
 
         buttons.getChildren().forEach((actor) -> {
@@ -154,7 +173,7 @@ public class MainMenuProvider {
             creditsMessage = "\\centerjustify \\fontsize=1.5 s2dmenues is a mod for galimulator written by geolykt.\nError: Couldn't read credits file:\n" + sw.toString().replace("\t", "    ");
         }
 
-        LabelStyle creditsLabelStyle = new LabelStyle(Styles.getInstance().getMSDFFont(), Color.WHITE.cpy());
+        LabelStyle creditsLabelStyle = new LabelStyle(FontConfig.getInstance().getPreferredFont(), Color.WHITE.cpy());
         Container<?> creditsContainer = new Container<>(new MSDFScrollingTextWidget(creditsLabelStyle, creditsMessage)).fillY();
         creditsContainer.background(TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(0x808080A7), 0.66F));
         creditsContainer.setClip(true);

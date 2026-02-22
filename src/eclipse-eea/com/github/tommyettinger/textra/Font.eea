@@ -1,0 +1,11 @@
+class com/github/tommyettinger/textra/Font
+
+name
+ Ljava/lang/String;
+ L1java/lang/String;
+getName
+ ()Ljava/lang/String;
+ ()L1java/lang/String;
+setName
+ (Ljava/lang/String;)Lcom/github/tommyettinger/textra/Font;
+ (L1java/lang/String;)L1com/github/tommyettinger/textra/Font;

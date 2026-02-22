@@ -5,6 +5,7 @@ import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.LoggerFactory;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
@@ -25,7 +26,11 @@ public class FullViewportDrawable extends BaseDrawable {
     @Override
     public void draw(Batch batch, float x, float y, float width, float height) {
         if (Gdx.gl.glGetError() == GL20.GL_INVALID_VALUE) {
-            throw new IllegalStateException("Something raised an GL20.GL_INVALID_VALUE before this method was called.");
+            try {
+                throw new IllegalStateException("Something raised an GL20.GL_INVALID_VALUE before this method was called.");
+            } catch (IllegalStateException e) {
+                LoggerFactory.getLogger(FullViewportDrawable.class).error("Attempting to recover from potentially fatal GL error!", e);
+            }
         }
 
         IntBuffer viewport = ByteBuffer.allocateDirect(64).order(ByteOrder.nativeOrder()).asIntBuffer();

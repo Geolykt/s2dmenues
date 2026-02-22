@@ -1,5 +1,7 @@
 package de.geolykt.s2dmenues;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 
 import org.jetbrains.annotations.NotNull;
@@ -17,6 +19,8 @@ import de.geolykt.starloader.api.event.EventPriority;
 import de.geolykt.starloader.api.event.Listener;
 import de.geolykt.starloader.api.event.lifecycle.ApplicationStartedEvent;
 import de.geolykt.starloader.api.event.lifecycle.ApplicationStopEvent;
+import de.geolykt.starloader.api.event.lifecycle.AtlasPackedEvent;
+import de.geolykt.starloader.api.event.lifecycle.AtlasPackingEvent;
 import de.geolykt.starloader.mod.Extension;
 
 public class S2DMenues extends Extension {
@@ -26,6 +30,12 @@ public class S2DMenues extends Extension {
 
     @Override
     public void initialize() {
+        try {
+            FontConfig.start(S2DMenues.MOD_DATA_DIR);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
         if (ApplicationStartedEvent.hasStarted()) {
             Gdx.app.postRunnable(MainMenuProvider::display);
         } else {
@@ -46,6 +56,16 @@ public class S2DMenues extends Extension {
                 } catch (RuntimeException e) {
                     S2DMenues.this.getLogger().error("Unable to dispose resources. The exception itself probably doesn't cause any harm, but it is adviseable to look into it's cause.", e);
                 }
+            }
+
+            @EventHandler
+            public void onAtlasStitch(@NotNull AtlasPackingEvent evt) throws IOException {
+                FontConfig.getInstance().registerTextures(evt);
+            }
+
+            @EventHandler
+            public void onAtlasSitched(@NotNull AtlasPackedEvent evt) throws IOException {
+                FontConfig.getInstance().bakeFonts(evt);
             }
         });
     }

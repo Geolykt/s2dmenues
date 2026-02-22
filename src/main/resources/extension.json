@@ -9,6 +9,11 @@
     "externalDependencies" : {
         "repositories" : [
             {
+                "name" : "stianloader-mirror",
+                "url" : "http://localhost/all",
+                "mirrorable" : false
+            },
+            {
                  "name" : "stianloader",
                  "url" : "https://stianloader.org/maven/",
                  "mirrorable" : false

@@ -30,6 +30,7 @@ repositories {
 starplane {
     withRAS(rootProject.file("src/main/resources/s2dmenues.ras"))
     mappingsFile("tinyv2", "newStarmap.tinyv2")
+    eclipseEEA = rootProject.file("src/eclipse-eea")
 }
 
 runMods {
@@ -53,7 +54,7 @@ deployMods {
 }
 
 dependencies {
-    dependencyMods("de.geolykt:starloader-api:2.0.0-a20260207:remapped")
+    dependencyMods("de.geolykt:starloader-api:2.0.0-a20260214:remapped")
     devRuntime "org.stianloader:launcher-micromixin:4.0.0-a20250819"
     compileOnly "org.stianloader:micromixin-annotations:0.6.2-a20240731"
     compileOnly "de.geolykt.starloader:starplane-annotations:1.0.0"
