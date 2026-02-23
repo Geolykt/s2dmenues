@@ -2,13 +2,16 @@ package de.geolykt.s2dmenues.components;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.LoggerFactory;
 
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.Align;
 import com.github.tommyettinger.textra.TextraButton;
 import com.github.tommyettinger.textra.TextraSelectBox;
@@ -16,6 +19,7 @@ import com.github.tommyettinger.textra.TextraSelectBox;
 import de.geolykt.s2dmenues.FontConfig;
 import de.geolykt.s2dmenues.FontConfig.FontPrimitive;
 import de.geolykt.s2dmenues.RunnableClickListener;
+import de.geolykt.s2dmenues.S2DI18N;
 import de.geolykt.s2dmenues.Styles;
 
 public class ConfigurationWindow extends S2DDialog {
@@ -37,10 +41,10 @@ public class ConfigurationWindow extends S2DDialog {
         this.titleTable.clear();
         this.removeActor(this.titleTable);
         this.titleLabel.setAlignment(Align.center);
-        System.out.println(this.titleLabel.getClass());
         this.getContentTable().add(this.titleLabel).colspan(2).top().fillX().height(48).row();
 
         this.addOption("Font", FontConfig.getInstance().getPreferredFontPrimitive(), FontConfig.getInstance().getAvailableFonts(), FontConfig.getInstance()::setPreferredFont, FontPrimitive::getName);
+        this.addOption("Language", S2DI18N.getActiveLocale(), S2DI18N.getAvailableLocales(), S2DI18N::setActiveLocale, Locale::getDisplayName);
 
         this.getContentTable().add().bottom().growY().row();
     }
@@ -58,7 +62,22 @@ public class ConfigurationWindow extends S2DDialog {
         List<T> optionList = options instanceof List ? (List<T>) options : new ArrayList<>();
 
         for (T option : options) {
-            selectBox.getItems().add(new DynamicTextraLabel(stringify.apply(option)));
+            DynamicTextraLabel label = new DynamicTextraLabel(stringify.apply(option)) {
+                @Override
+                public void draw(Batch batch, float parentAlpha) {
+                    float prefWidth = selectBox.getList().getWidth();
+                    Drawable background = selectBox.getStyle().listStyle.background;
+                    if (background != null) {
+                        prefWidth -= background.getLeftWidth() + background.getRightWidth();
+                    }
+                    if (this.getWidth() < prefWidth) {
+                        this.setWidth(prefWidth);
+                    }
+                    super.draw(batch, parentAlpha);
+                }
+            };
+
+            selectBox.getItems().add(label);
 
             if (option == currentValue) {
                 foundCurrent = true;

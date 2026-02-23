@@ -153,24 +153,16 @@ public class FontConfig {
             }
 
             Galimulator.runTaskOnNextFrame(() -> {
-                Galimulator.runTaskOnNextFrame(() -> {
-
-                    Font fnt = this.textraFont;
-                    if (fnt != null) {
-                        this.textraFont = null;
-                        fnt.dispose();
-                    }
-
-                    Texture tex = this.disposeTexture;
-                    if (tex != null) {
-                        tex.dispose();
-                    }
-                });
-                if (!Boolean.getBoolean("de.geolykt.s2dmenues.forceClearBuffers")) {
-                    return;
+                Font fnt = this.textraFont;
+                if (fnt != null) {
+                    this.textraFont = null;
+                    fnt.dispose();
                 }
-                // FIXME code crashes still
 
+                Texture tex = this.disposeTexture;
+                if (tex != null) {
+                    tex.dispose();
+                }
             });
         }
 

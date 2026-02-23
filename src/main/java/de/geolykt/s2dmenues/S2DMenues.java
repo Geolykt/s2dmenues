@@ -25,13 +25,16 @@ import de.geolykt.starloader.mod.Extension;
 
 public class S2DMenues extends Extension {
 
+    public static final String MOD_ID = "s2dmenues"; // This is giving off FML vibes. Oh well, nostalgia is a good thing, no?
+
     @NotNull
-    public static final Path MOD_DATA_DIR = Starloader.getInstance().getModDirectory().resolve("s2dmenues");
+    public static final Path MOD_DATA_DIR = Starloader.getInstance().getModDirectory().resolve(S2DMenues.MOD_ID);
 
     @Override
     public void initialize() {
         try {
             FontConfig.start(S2DMenues.MOD_DATA_DIR);
+            S2DI18N.start();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

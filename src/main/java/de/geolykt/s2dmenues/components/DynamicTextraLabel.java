@@ -11,6 +11,7 @@ import com.github.tommyettinger.textra.Styles.LabelStyle;
 import com.github.tommyettinger.textra.TextraLabel;
 
 import de.geolykt.s2dmenues.FontConfig;
+import de.geolykt.starloader.api.gui.Drawing;
 
 public class DynamicTextraLabel extends TextraLabel {
 
@@ -54,6 +55,11 @@ public class DynamicTextraLabel extends TextraLabel {
         }
 
         this.setFont(FontConfig.getInstance().getPreferredFont(), true);
+
+        if (this.getDebug()) {
+            batch.draw(Drawing.getTextureProvider().getSinglePixelSquare(), this.getX(), this.getY(), this.getWidth(), this.getHeight());
+        }
+
         super.draw(batch, parentAlpha);
     }
 }

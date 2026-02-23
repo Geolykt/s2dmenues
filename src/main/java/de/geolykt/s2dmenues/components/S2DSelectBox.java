@@ -34,15 +34,19 @@ public class S2DSelectBox extends TextraSelectBox {
                 x + width, y + height, redFloatBits, u2, v2,
                 x + width, y, redFloatBits, u2, v1,
             }, 0, 12);
+
+//            LoggerFactory.getLogger(S2DDialog.class).warn("{}#{} - {}x{}", x, y, width, height);
         }
     }
 
     @NotNull
     private static SelectBoxStyle getDefaultStyle() {
         ListStyle listStyle = new ListStyle();
-        listStyle.fontColorSelected = Color.WHITE;
-        listStyle.fontColorUnselected = Color.GRAY;
+        listStyle.fontColorSelected = Color.GRAY;
+        listStyle.fontColorUnselected = Color.WHITE;
         listStyle.selection = new BasicSelectionDrawable();
+        // 157, 68, 47
+        listStyle.background = new LAFAquaBoxDrawable(16F, Color.toFloatBits(90, 45, 33/*157, 68, 47*/, 255));
         SelectBoxStyle selectorStyle = new SelectBoxStyle();
         selectorStyle.fontColor = Color.WHITE;
         selectorStyle.overFontColor = Color.GRAY;
