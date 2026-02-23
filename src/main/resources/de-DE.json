@@ -1,6 +1,12 @@
 {
     "s2dmenues:mainmenu.button.new": "Neuer Spielstand",
-    "s2dmenues:mainmenu.button.continue": "Spielstand Fortsetzen",
-    "s2dmenues:mainmenu.button.load": "Spielstand Laden",
-    "s2dmenues:mainmenu.button.options": "Optionen"
+    "s2dmenues:mainmenu.button.continue": "Spielstand fortsetzen",
+    "s2dmenues:mainmenu.button.load": "Spielstand laden",
+    "s2dmenues:mainmenu.button.options": "Optionen",
+    "s2dmenues:mainmenu.button.exit": "Spiel schließen",
+    "s2dmenues:dialog.load.title": "Spielstand laden",
+    "s2dmenues:dialog.options.title": "Einstellungen",
+    "s2dmenues:dialog.options.keys.font": "Schriftzug",
+    "s2dmenues:dialog.options.keys.language": "Sprache",
+    "s2dmenues:laf.dialog.close": "Schließen"
 }

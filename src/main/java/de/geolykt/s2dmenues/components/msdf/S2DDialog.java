@@ -1,6 +1,7 @@
-package de.geolykt.s2dmenues.components;
+package de.geolykt.s2dmenues.components.msdf;
 
 import java.util.Objects;
+import java.util.function.Supplier;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,6 +17,11 @@ import de.geolykt.s2dmenues.FontConfig;
 public abstract class S2DDialog extends TextraDialog {
     public S2DDialog(@NotNull String title, @NotNull WindowStyle windowStyle) {
         super(title, windowStyle, FontConfig.getInstance().getPreferredFont());
+    }
+
+    public S2DDialog(@NotNull Supplier<@NotNull String> title, @NotNull WindowStyle windowStyle) {
+        super(title.get(), windowStyle, FontConfig.getInstance().getPreferredFont());
+        ((DynamicTextraLabel) this.getTitleLabel()).setTextSupplier(title);
     }
 
     @Override

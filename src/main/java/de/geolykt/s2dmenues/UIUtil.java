@@ -16,7 +16,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.github.tommyettinger.textra.TextraButton;
 
-import de.geolykt.s2dmenues.components.RunnableTextraButton;
+import de.geolykt.s2dmenues.components.msdf.RunnableTextraButton;
 import de.geolykt.starloader.api.utils.FloatConsumer;
 
 public class UIUtil {

@@ -1,4 +1,4 @@
-package de.geolykt.s2dmenues.components;
+package de.geolykt.s2dmenues.components.msdf;
 
 import org.jetbrains.annotations.ApiStatus.OverrideOnly;
 import org.jetbrains.annotations.NotNull;
@@ -14,6 +14,7 @@ import com.github.tommyettinger.textra.TextraSelectBox;
 
 import de.geolykt.s2dmenues.FontConfig;
 import de.geolykt.s2dmenues.Styles;
+import de.geolykt.s2dmenues.components.drawables.LAFAquaBoxDrawable;
 import de.geolykt.starloader.api.gui.Drawing;
 
 public class S2DSelectBox extends TextraSelectBox {

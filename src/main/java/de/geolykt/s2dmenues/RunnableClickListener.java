@@ -1,5 +1,7 @@
 package de.geolykt.s2dmenues;
 
+import java.util.Objects;
+
 import org.jetbrains.annotations.NotNull;
 
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -10,7 +12,7 @@ public class RunnableClickListener extends InputListener {
     private final Runnable runnable;
 
     public RunnableClickListener(@NotNull Runnable runnable) {
-        this.runnable = runnable;
+        this.runnable = Objects.requireNonNull(runnable, "'runnable' may not be null");
     }
 
     @Override

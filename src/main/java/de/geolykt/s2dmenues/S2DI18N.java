@@ -14,6 +14,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.jetbrains.annotations.NotNull;
@@ -26,40 +27,51 @@ import de.geolykt.starloader.api.NamespacedKey;
 import de.geolykt.starloader.util.JavaInterop;
 
 public final class S2DI18N {
-    private S2DI18N() {
-        throw new UnsupportedOperationException("This class is stateless!");
-    }
+    @NotNull
+    private static Locale activeLocale = Locale.ENGLISH;
+
+    @NotNull
+    @Unmodifiable
+    private static Map<NamespacedKey, String> activeTranslation = Collections.emptyMap();
 
     private static final Map<@NotNull Locale, @NotNull Map<NamespacedKey, String>> LANGUAGES = new TreeMap<>((localeA, localeB) -> {
         return localeA.getDisplayName().compareTo(localeB.getDisplayName());
     });
 
     @NotNull
-    @Unmodifiable
-    private static Map<NamespacedKey, String> activeTranslation = Collections.emptyMap();
-
-    @NotNull
-    private static Locale activeLocale = Locale.UK;
-
-    @NotNull
-    public static String translate(@NotNull NamespacedKey key) {
-        String value = S2DI18N.activeTranslation.get(key);
-
-        if (value == null) {
-            return key.getNamespace() + ":" + key.getKey();
-        }
-
-        return value;
-    }
-
-    @NotNull
     public static Locale getActiveLocale() {
         return S2DI18N.activeLocale;
     }
 
-    public static void setActiveLocale(@NotNull Locale activeLocale) {
-        S2DI18N.activeLocale = Objects.requireNonNull(activeLocale, "'activeLocale' may not be null.");
-        S2DI18N.saveConfig();
+    @NotNull
+    public static Iterable<@NotNull Locale> getAvailableLocales() {
+        return S2DI18N.LANGUAGES.keySet();
+    }
+
+    private static void loadBuiltinLanguage(@NotNull String name) throws IOException {
+        try (InputStream in = S2DI18N.class.getClassLoader().getResourceAsStream("" + name + ".json")) {
+            if (in == null) {
+                throw new IOException("Resource '/" + name + ".json' couldn't be found in classloader '" + JavaInterop.getClassloaderName(S2DI18N.class.getClassLoader()) + "'.");
+            }
+
+            S2DI18N.loadLanguage(Locale.forLanguageTag(name), new JSONObject(new String(JavaInterop.readAllBytes(in), StandardCharsets.UTF_8)));
+        }
+    }
+
+    public static void loadLanguage(@NotNull Locale language, @NotNull JSONObject translations) {
+        Map<NamespacedKey, String> translationMappings = new HashMap<>();
+
+        for (String keyName : translations.keySet()) {
+            translationMappings.put(NamespacedKey.fromString(keyName), translations.getString(keyName));
+        }
+
+        S2DI18N.LANGUAGES.put(language, translationMappings);
+    }
+
+    @NotNull
+    public static Supplier<@NotNull String> s2d(@NotNull String key) {
+        NamespacedKey nsKey = NamespacedKey.fromString("s2dmenues", key);
+        return () -> S2DI18N.translate(nsKey);
     }
 
     private static void saveConfig() {
@@ -73,29 +85,10 @@ public final class S2DI18N {
         }
     }
 
-    @NotNull
-    public static Iterable<@NotNull Locale> getAvailableLocales() {
-        return S2DI18N.LANGUAGES.keySet();
-    }
-
-    public static void loadLanguage(@NotNull Locale language, @NotNull JSONObject translations) {
-        Map<NamespacedKey, String> translationMappings = new HashMap<>();
-
-        for (String keyName : translations.keySet()) {
-            translationMappings.put(NamespacedKey.fromString(keyName), translations.getString(keyName));
-        }
-
-        S2DI18N.LANGUAGES.put(language, translationMappings);
-    }
-
-    private static void loadBuiltinLanguage(@NotNull String name) throws IOException {
-        try (InputStream in = S2DI18N.class.getClassLoader().getResourceAsStream("" + name + ".json")) {
-            if (in == null) {
-                throw new IOException("Resource '/" + name + ".json' couldn't be found in classloader '" + JavaInterop.getClassloaderName(S2DI18N.class.getClassLoader()) + "'.");
-            }
-
-            S2DI18N.loadLanguage(Locale.forLanguageTag(name), new JSONObject(new String(JavaInterop.readAllBytes(in), StandardCharsets.UTF_8)));
-        }
+    public static void setActiveLocale(@NotNull Locale activeLocale) {
+        S2DI18N.activeLocale = Objects.requireNonNull(activeLocale, "'activeLocale' may not be null.");
+        S2DI18N.activeTranslation = Collections.unmodifiableMap(S2DI18N.LANGUAGES.getOrDefault(S2DI18N.activeLocale, Collections.emptyMap()));
+        S2DI18N.saveConfig();
     }
 
     static void start() throws IOException {
@@ -136,8 +129,23 @@ public final class S2DI18N {
         });
 
         S2DI18N.loadBuiltinLanguage("de-DE");
-        S2DI18N.loadBuiltinLanguage("en-GB");
+        S2DI18N.loadBuiltinLanguage("en");
 
         S2DI18N.activeTranslation = Collections.unmodifiableMap(S2DI18N.LANGUAGES.getOrDefault(S2DI18N.activeLocale, Collections.emptyMap()));
+    }
+
+    @NotNull
+    public static String translate(@NotNull NamespacedKey key) {
+        String value = S2DI18N.activeTranslation.get(key);
+
+        if (value == null) {
+            return key.getNamespace() + ":" + key.getKey();
+        }
+
+        return value;
+    }
+
+    private S2DI18N() {
+        throw new UnsupportedOperationException("This class is stateless!");
     }
 }

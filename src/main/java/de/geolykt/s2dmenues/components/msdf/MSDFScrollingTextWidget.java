@@ -1,4 +1,4 @@
-package de.geolykt.s2dmenues.components;
+package de.geolykt.s2dmenues.components.msdf;
 
 import java.util.ArrayList;
 import java.util.Collections;

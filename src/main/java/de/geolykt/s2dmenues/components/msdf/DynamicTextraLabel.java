@@ -1,5 +1,6 @@
-package de.geolykt.s2dmenues.components;
+package de.geolykt.s2dmenues.components.msdf;
 
+import java.util.Objects;
 import java.util.function.Supplier;
 
 import org.jetbrains.annotations.NotNull;
@@ -16,7 +17,7 @@ import de.geolykt.starloader.api.gui.Drawing;
 public class DynamicTextraLabel extends TextraLabel {
 
     @Nullable
-    private final Supplier<@NotNull String> textSupplier;
+    private Supplier<@NotNull String> textSupplier;
 
     public DynamicTextraLabel(@NotNull String text) {
         this(text, (Color) null);
@@ -61,5 +62,9 @@ public class DynamicTextraLabel extends TextraLabel {
         }
 
         super.draw(batch, parentAlpha);
+    }
+
+    public void setTextSupplier(@NotNull Supplier<@NotNull String> textSupplier) {
+        this.textSupplier = Objects.requireNonNull(textSupplier, "'textSupplier' may not be null!");
     }
 }

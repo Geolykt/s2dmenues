@@ -1,0 +1,12 @@
+{
+    "s2dmenues:mainmenu.button.new": "New game",
+    "s2dmenues:mainmenu.button.continue": "Continue",
+    "s2dmenues:mainmenu.button.load": "Load savegame",
+    "s2dmenues:mainmenu.button.options": "Options",
+    "s2dmenues:mainmenu.button.exit": "Exit game",
+    "s2dmenues:dialog.load.title": "Load savegame",
+    "s2dmenues:dialog.options.title": "Configuration",
+    "s2dmenues:dialog.options.keys.font": "Font",
+    "s2dmenues:dialog.options.keys.language": "Language",
+    "s2dmenues:laf.dialog.close": "Close",
+}

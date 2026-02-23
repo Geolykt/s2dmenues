@@ -1,4 +1,4 @@
-package de.geolykt.s2dmenues.components;
+package de.geolykt.s2dmenues.components.drawables;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;

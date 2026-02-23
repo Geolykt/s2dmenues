@@ -25,7 +25,6 @@ import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Container;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
-import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup;
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.scenes.scene2d.utils.Disableable;
@@ -33,14 +32,14 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.github.tommyettinger.textra.Styles.LabelStyle;
 import com.github.tommyettinger.textra.TextraButton;
 
-import de.geolykt.s2dmenues.components.ConfigurationWindow;
-import de.geolykt.s2dmenues.components.CroppingTextureDrawable;
-import de.geolykt.s2dmenues.components.GenGalaxyWindow;
-import de.geolykt.s2dmenues.components.MSDFScrollingTextWidget;
-import de.geolykt.s2dmenues.components.NOPActor;
-import de.geolykt.s2dmenues.components.RunnableTextraButton;
-import de.geolykt.s2dmenues.components.S2DSavegameBrowser;
-import de.geolykt.s2dmenues.components.MSDFTextDrawable;
+import de.geolykt.s2dmenues.components.drawables.CroppingTextureDrawable;
+import de.geolykt.s2dmenues.components.drawables.MSDFTextDrawable;
+import de.geolykt.s2dmenues.components.gui.ConfigurationWindow;
+import de.geolykt.s2dmenues.components.gui.GenGalaxyWindow;
+import de.geolykt.s2dmenues.components.gui.LAFAquaDialog;
+import de.geolykt.s2dmenues.components.gui.S2DSavegameBrowser;
+import de.geolykt.s2dmenues.components.msdf.MSDFScrollingTextWidget;
+import de.geolykt.s2dmenues.components.msdf.RunnableTextraButton;
 import de.geolykt.starloader.api.Galimulator;
 import de.geolykt.starloader.api.gui.Drawing;
 import de.geolykt.starloader.api.gui.openui.PathSavegame;
@@ -115,11 +114,11 @@ public class MainMenuProvider {
         AtomicReference<GenGalaxyWindow> genGalaxyWindow = new AtomicReference<>();
         AtomicReference<ConfigurationWindow> configWindow = new AtomicReference<>();
 
-        TextraButton exit = new RunnableTextraButton("Exit game", Styles.getInstance().buttonStyle, Gdx.app::exit);
-        TextraButton load = new RunnableTextraButton("Load galaxy", Styles.getInstance().buttonStyle, () -> {
+        TextraButton exit = new RunnableTextraButton(S2DI18N.s2d("mainmenu.button.exit"), Styles.getInstance().buttonStyle, Gdx.app::exit);
+        TextraButton load = new RunnableTextraButton(S2DI18N.s2d("mainmenu.button.load"), Styles.getInstance().buttonStyle, () -> {
             MainMenuProvider.displayLoadMenu(stage);
         });
-        TextraButton newG = new RunnableTextraButton("New galaxy", Styles.getInstance().buttonStyle, () -> {
+        TextraButton newG = new RunnableTextraButton(S2DI18N.s2d("mainmenu.button.new"), Styles.getInstance().buttonStyle, () -> {
             MainMenuProvider.disableAll(stage.getRoot());
             GenGalaxyWindow window = genGalaxyWindow.get();
             if (window == null) {
@@ -133,11 +132,10 @@ public class MainMenuProvider {
             }
             window.show(stage);
         });
-        RunnableTextraButton continueG = new RunnableTextraButton("Continue galaxy", Styles.getInstance().buttonStyle, () -> {
+        RunnableTextraButton continueG = new RunnableTextraButton(S2DI18N.s2d("mainmenu.button.continue"), Styles.getInstance().buttonStyle, () -> {
             Drawing.setShownStage(null);
         });
-        RunnableTextraButton configButton = new RunnableTextraButton("Options", Styles.getInstance().buttonStyle, () -> {
-            LoggerFactory.getLogger(MainMenuProvider.class).info("Opening options menu");
+        RunnableTextraButton configButton = new RunnableTextraButton(S2DI18N.s2d("mainmenu.button.options"), Styles.getInstance().buttonStyle, () -> {
             MainMenuProvider.disableAll(stage.getRoot());
             ConfigurationWindow window = configWindow.get();
             if (window == null) {
@@ -189,15 +187,18 @@ public class MainMenuProvider {
         mainMenuItemsWindow.pack();
         mainMenuItemsWindow.show(stage);
 
-        LoggerFactory.getLogger(MainMenuProvider.class).info("Injecting main menu stage");
         Drawing.setShownStage(stage);
     }
 
     private static void displayLoadMenu(@NotNull Stage stage) {
         MainMenuProvider.disableAll(stage.getRoot());
 
-        Dialog dialog = new Dialog("Load savegame", Styles.getInstance().windowStyleTranslucent);
-        TextraButton close = new TextraButton("Close", Styles.getInstance().cancelButtonStyle);
+        LAFAquaDialog dialog = new LAFAquaDialog("dialog.load.title");
+        dialog.addCloseAction(() -> {
+            dialog.hide();
+            MainMenuProvider.enableAll(stage.getRoot());
+        });
+
         S2DSavegameBrowser browser = new S2DSavegameBrowser(savegame -> {
             if (!(savegame instanceof PathSavegame)) {
                 // Not part of the official API. I should really expose that method one of these days given of how useful it is
@@ -229,24 +230,8 @@ public class MainMenuProvider {
             e.printStackTrace();
         }
 
-        // vgroup1 and hgroup1 are there to implement padding in a remarkably basic way
-        VerticalGroup vgroup1 = new VerticalGroup();
-        HorizontalGroup hgroup1 = new HorizontalGroup();
-        hgroup1.addActor(new NOPActor(15, 15));
-        hgroup1.addActor(vgroup1);
-        hgroup1.addActor(new NOPActor(15, 15));
-
-        vgroup1.addActor(new NOPActor(15, 15));
-        vgroup1.addActor(browser);
-        vgroup1.addActor(close);
-        vgroup1.addActor(new NOPActor(15, 15));
-
-        close.addListener(new RunnableClickListener(() -> {
-            dialog.hide();
-            MainMenuProvider.enableAll(stage.getRoot());
-        }));
-
-        dialog.add(vgroup1);
+        dialog.getContentTable().add(browser).center();
+        dialog.pack();
         dialog.show(stage);
     }
 

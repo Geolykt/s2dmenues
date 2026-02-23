@@ -1,4 +1,4 @@
-package de.geolykt.s2dmenues.components;
+package de.geolykt.s2dmenues.components.gui;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,47 +12,21 @@ import org.slf4j.LoggerFactory;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
-import com.badlogic.gdx.utils.Align;
-import com.github.tommyettinger.textra.TextraButton;
 import com.github.tommyettinger.textra.TextraSelectBox;
 
 import de.geolykt.s2dmenues.FontConfig;
 import de.geolykt.s2dmenues.FontConfig.FontPrimitive;
-import de.geolykt.s2dmenues.RunnableClickListener;
 import de.geolykt.s2dmenues.S2DI18N;
-import de.geolykt.s2dmenues.Styles;
+import de.geolykt.s2dmenues.components.msdf.DynamicTextraLabel;
+import de.geolykt.s2dmenues.components.msdf.S2DSelectBox;
 
-public class ConfigurationWindow extends S2DDialog {
-
-    @NotNull
-    private final TextraButton closeButton;
+public class ConfigurationWindow extends LAFAquaDialog {
 
     public ConfigurationWindow() {
-        super("Configuration", Styles.getInstance().windowStyleAquaTextra);
-
-//        this.debugAll();
-        this.setResizable(true);
-        this.setResizeBorder(16);
-        this.setMovable(true);
-
-        this.closeButton = new RunnableTextraButton("Close", Styles.getInstance().cancelButtonStyle, (Runnable) this::hide);
-        this.getButtonTable().add(this.closeButton);
-
-        this.titleTable.clear();
-        this.removeActor(this.titleTable);
-        this.titleLabel.setAlignment(Align.center);
-        this.getContentTable().add(this.titleLabel).colspan(2).top().fillX().height(48).row();
-
-        this.addOption("Font", FontConfig.getInstance().getPreferredFontPrimitive(), FontConfig.getInstance().getAvailableFonts(), FontConfig.getInstance()::setPreferredFont, FontPrimitive::getName);
-        this.addOption("Language", S2DI18N.getActiveLocale(), S2DI18N.getAvailableLocales(), S2DI18N::setActiveLocale, Locale::getDisplayName);
-
+        super("dialog.options.title");
+        this.addOption("dialog.options.keys.font", FontConfig.getInstance().getPreferredFontPrimitive(), FontConfig.getInstance().getAvailableFonts(), FontConfig.getInstance()::setPreferredFont, FontPrimitive::getName);
+        this.addOption("dialog.options.keys.language", S2DI18N.getActiveLocale(), S2DI18N.getAvailableLocales(), S2DI18N::setActiveLocale, Locale::getDisplayName);
         this.getContentTable().add().bottom().growY().row();
-    }
-
-    @NotNull
-    public ConfigurationWindow addCloseAction(@NotNull Runnable action) {
-        this.closeButton.addListener(new RunnableClickListener(action));
-        return this;
     }
 
     public <@NotNull T> void addOption(@NotNull String keyName, T currentValue, @NotNull Iterable<T> options, @NotNull Consumer<T> applyOption, @NotNull Function<T, @NotNull String> stringify) {
@@ -105,7 +79,7 @@ public class ConfigurationWindow extends S2DDialog {
         }
 
         selectBox.setItems(selectBox.getItems());
-        this.getContentTable().add(new DynamicTextraLabel(keyName)).top().left().growX();
+        this.getContentTable().add(new DynamicTextraLabel(S2DI18N.s2d(keyName))).top().left().growX();
         this.getContentTable().add(selectBox).top().right().growX().row();
     }
 }

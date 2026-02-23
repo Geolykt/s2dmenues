@@ -1,4 +1,4 @@
-package de.geolykt.s2dmenues.components;
+package de.geolykt.s2dmenues.components.gui;
 
 import java.io.BufferedReader;
 import java.io.IOException;

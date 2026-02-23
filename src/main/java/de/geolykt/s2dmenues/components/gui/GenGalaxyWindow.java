@@ -1,4 +1,4 @@
-package de.geolykt.s2dmenues.components;
+package de.geolykt.s2dmenues.components.gui;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,6 +37,8 @@ import de.geolykt.s2dmenues.UIUtil;
 import de.geolykt.s2dmenues.bridge.MovingSpiralStarGenerator;
 import de.geolykt.s2dmenues.bridge.ReflectionHacks;
 import de.geolykt.s2dmenues.bridge.VelocityMovingStarGenerator;
+import de.geolykt.s2dmenues.components.NOPActor;
+import de.geolykt.s2dmenues.components.msdf.RunnableTextraButton;
 import de.geolykt.s2dmenues.incubator.StarPlacementGenerator;
 import de.geolykt.s2dmenues.incubator.StarPlacementRegistry;
 import de.geolykt.starloader.api.NamespacedKey;

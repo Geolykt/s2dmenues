@@ -15,8 +15,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Disposable;
 import com.github.tommyettinger.textra.Styles.TextButtonStyle;
 
-import de.geolykt.s2dmenues.components.FullViewportDrawable;
-import de.geolykt.s2dmenues.components.LAFAquaBackgroundDrawable;
+import de.geolykt.s2dmenues.components.drawables.FullViewportDrawable;
+import de.geolykt.s2dmenues.components.drawables.LAFAquaBackgroundDrawable;
 import de.geolykt.starloader.api.gui.Drawing;
 
 public class Styles implements Disposable {

@@ -1,4 +1,4 @@
-package de.geolykt.s2dmenues.components;
+package de.geolykt.s2dmenues.components.drawables;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

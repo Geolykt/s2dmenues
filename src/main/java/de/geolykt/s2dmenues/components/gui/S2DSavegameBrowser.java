@@ -1,4 +1,4 @@
-package de.geolykt.s2dmenues.components;
+package de.geolykt.s2dmenues.components.gui;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -17,6 +17,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
 import com.github.tommyettinger.textra.TextraButton;
 
 import de.geolykt.s2dmenues.Styles;
+import de.geolykt.s2dmenues.components.msdf.RunnableTextraButton;
 import de.geolykt.starloader.api.gui.openui.Savegame;
 
 public class S2DSavegameBrowser extends Container<ScrollPane> {
