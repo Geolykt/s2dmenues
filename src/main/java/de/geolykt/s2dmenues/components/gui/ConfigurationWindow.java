@@ -15,8 +15,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.github.tommyettinger.textra.TextraSelectBox;
 
 import de.geolykt.s2dmenues.FontConfig;
-import de.geolykt.s2dmenues.FontConfig.FontPrimitive;
 import de.geolykt.s2dmenues.S2DI18N;
+import de.geolykt.s2dmenues.FontConfig.FontPrimitive;
 import de.geolykt.s2dmenues.components.msdf.DynamicTextraLabel;
 import de.geolykt.s2dmenues.components.msdf.S2DSelectBox;
 

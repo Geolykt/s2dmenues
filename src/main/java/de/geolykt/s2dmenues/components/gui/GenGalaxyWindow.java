@@ -3,6 +3,7 @@ package de.geolykt.s2dmenues.components.gui;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Objects;
@@ -10,7 +11,9 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.LoggerFactory;
@@ -25,15 +28,16 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.SplitPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
-import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Disposable;
 import com.github.tommyettinger.textra.TextraButton;
 
-import de.geolykt.s2dmenues.RunnableClickListener;
+import de.geolykt.s2dmenues.S2DI18N;
+import de.geolykt.s2dmenues.S2DI18N.ConfiguredTranslateable;
+import de.geolykt.s2dmenues.S2DI18N.PlaceholderContext;
 import de.geolykt.s2dmenues.Styles;
 import de.geolykt.s2dmenues.UIUtil;
+import de.geolykt.s2dmenues.bridge.I18NCapable;
 import de.geolykt.s2dmenues.bridge.MovingSpiralStarGenerator;
 import de.geolykt.s2dmenues.bridge.ReflectionHacks;
 import de.geolykt.s2dmenues.bridge.VelocityMovingStarGenerator;
@@ -58,7 +62,7 @@ import snoddasmannen.galimulator.Space.ConnectionMethod;
 import snoddasmannen.galimulator.Space.StarAdjustmentMethod;
 import snoddasmannen.galimulator.StarGenerator;
 
-public class GenGalaxyWindow extends Dialog implements Disposable {
+public class GenGalaxyWindow extends LAFAquaDialog implements Disposable, PlaceholderContext {
 
     private static enum SubDialog {
         ADJUSTMENT_METHODS,
@@ -70,9 +74,10 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
     }
 
     @NotNull
-    private StarAdjustmentMethod adjustmentMethod = StarAdjustmentMethod.NORMAL;
+    public static final NamespacedKey PLACEHOLDER_KEY = NamespacedKey.fromString("s2dmenues", "dialogs.generate_galaxy");
+
     @NotNull
-    private final TextraButton closeButton;
+    private StarAdjustmentMethod adjustmentMethod = StarAdjustmentMethod.NORMAL;
     @NotNull
     private final Table contentTableUpper;
     @Nullable
@@ -105,24 +110,28 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
     @NotNull
     private final TextraButton starlaneGeneratorButton;
 
-    public GenGalaxyWindow(@NotNull WindowStyle style) {
-        super("Generate Galaxy", style);
-        this.setMovable(true);
-        this.setModal(true);
-        this.setResizable(true);
+    @NotNull
+    @Contract(pure = true)
+    protected ConfiguredTranslateable translate(@NotNull String key) {
+        return S2DI18N.s2d(key).withContext(GenGalaxyWindow.PLACEHOLDER_KEY, this);
+    }
+
+    public GenGalaxyWindow() {
+        super("dialog.galgen.title");
 
         this.contentTableUpper = new Table();
         this.masterSplitPane = new SplitPane(this.contentTableUpper, null, true, Styles.getInstance().splitPaneStyle);
 
-        this.galaxyGenerateButton = new RunnableTextraButton("Generate Galaxy!", Styles.getInstance().confirmButtonStyle, (button) -> {
+        this.galaxyGenerateButton = new RunnableTextraButton(this.translate("dialog.galgen.button.confirm"), Styles.getInstance().confirmButtonStyle, (button) -> {
             this.mapdata.setConnectionMethod((ConnectionMethod) this.starlaneGenerator);
             this.mapdata.setStarAdjustmentMethod(this.adjustmentMethod);
             this.mapdata.setScenarioSource(this.currentScenarioSource);
             Space.generateGalaxySync(this.galaxySize, this.mapdata);
             Drawing.setShownStage(null);
         });
-        this.galaxySizeButton = UIUtil.createUnsignedIntInputButton("Star count", this::getGalaxySize, this::setGalaxySize);
-        this.galaxyTypeButton = new RunnableTextraButton("Galaxy type", Styles.getInstance().buttonStyle, (openGalaxyTypeSelectionButton) -> {
+
+        this.galaxySizeButton = UIUtil.createUnsignedIntInputButton(this.translate("dialog.galgen.button.size"), this::setGalaxySize);
+        this.galaxyTypeButton = new RunnableTextraButton(this.translate("dialog.galgen.button.type"), Styles.getInstance().buttonStyle, (openGalaxyTypeSelectionButton) -> {
             this.enableCurrentDialogButton();
             openGalaxyTypeSelectionButton.setDisabled(true);
             this.dialog = SubDialog.GALAXY_TYPE;
@@ -185,27 +194,39 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             }
         });
 
-        this.starAdjustmentsButton = new RunnableTextraButton("Adjustments [GRAY](" + this.adjustmentMethod.toString() + ")[]", Styles.getInstance().buttonStyle, (starAdjustmentsButton) -> {
+        this.starAdjustmentsButton = new RunnableTextraButton(this.translate("dialog.galgen.button.adjustments"), Styles.getInstance().buttonStyle, (starAdjustmentsButton) -> {
             this.enableCurrentDialogButton();
             starAdjustmentsButton.setDisabled(true);
             this.dialog = SubDialog.ADJUSTMENT_METHODS;
             TreeMap<String, Actor> buttons = new TreeMap<>();
             AtomicReference<Button> currentlyActiveButton = new AtomicReference<>();
+
             for (StarAdjustmentMethod adjustmentMethod : StarAdjustmentMethod.values()) {
-                Button adjustmentButton = new RunnableTextraButton(Objects.toString(adjustmentMethod), Styles.getInstance().buttonStyle, (clickedOption) -> {
+
+                Supplier<@NotNull String> adjustmentMethodName;
+
+                if (adjustmentMethod instanceof I18NCapable) {
+                    adjustmentMethodName = ((I18NCapable) adjustmentMethod).s2dmenues$getLocalisation();
+                } else {
+                    adjustmentMethodName = S2DI18N.s2d("registries.adjustments.galimulator." + adjustmentMethod.name().toLowerCase(Locale.ROOT));
+                }
+
+                Button adjustmentButton = new RunnableTextraButton(adjustmentMethodName, Styles.getInstance().buttonStyle, (clickedOption) -> {
                     this.adjustmentMethod = adjustmentMethod;
-                    starAdjustmentsButton.setText("Adjustments [GRAY](" + this.adjustmentMethod.toString() + ")[]");
                     currentlyActiveButton.get().setDisabled(false);
                     currentlyActiveButton.lazySet(clickedOption);
                     clickedOption.setDisabled(true);
                 });
+
                 adjustmentButton.addListener((evt) -> {
                     if (evt instanceof InputEvent && ((InputEvent) evt).getType() == InputEvent.Type.enter) {
                         GenGalaxyWindow.this.getStage().setScrollFocus(evt.getListenerActor());
                     }
                     return false;
                 });
-                buttons.put(adjustmentMethod.toString(), adjustmentButton);
+
+                buttons.put(adjustmentMethodName.get(), adjustmentButton); // Key only required for stable order. Hence this is good enough most of the time
+
                 if (adjustmentMethod == this.adjustmentMethod) {
                     adjustmentButton.setDisabled(true);
                     currentlyActiveButton.lazySet(adjustmentButton);
@@ -214,33 +235,39 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
 
             HorizontalGroup buttonGroup = new HorizontalGroup().wrap(true).top().left();
             buttons.values().forEach(buttonGroup::addActor);
+
             this.masterSplitPane.setSecondWidget(new ScrollPane(buttonGroup, Styles.getInstance().scrollPaneStyle));
             if (this.masterSplitPane.getSplitAmount() > 0.8F) {
                 this.masterSplitPane.setSplitAmount(0.8F);
             }
         });
 
-        this.starlaneGeneratorButton = new RunnableTextraButton("Starlanes [GRAY](" + this.starlaneGenerator.getDisplayName() + ")[]", Styles.getInstance().buttonStyle, (starlaneGenButton) -> {
+        this.starlaneGeneratorButton = new RunnableTextraButton(this.translate("dialog.galgen.button.starlanes"), Styles.getInstance().buttonStyle, (starlaneGenButton) -> {
             this.enableCurrentDialogButton();
             starlaneGenButton.setDisabled(true);
             this.dialog = SubDialog.STARLANE_METHODS;
             TreeMap<String, Actor> buttons = new TreeMap<>();
             AtomicReference<Button> currentlyActiveButton = new AtomicReference<>();
+
             for (StarlaneGenerator generator : Registry.STARLANE_GENERATORS.getValues()) {
-                Button generatorButton = new RunnableTextraButton(generator.getDisplayName(), Styles.getInstance().buttonStyle, (clickedOption) -> {
+                Supplier<@NotNull String> generatorName = S2DI18N.translate(generator);
+
+                Button generatorButton = new RunnableTextraButton(generatorName, Styles.getInstance().buttonStyle, (clickedOption) -> {
                     this.starlaneGenerator = generator;
-                    starlaneGenButton.setText("Starlanes [GRAY](" + this.starlaneGenerator.getDisplayName() + ")[]");
                     currentlyActiveButton.get().setDisabled(false);
                     currentlyActiveButton.lazySet(clickedOption);
                     clickedOption.setDisabled(true);
                 });
+
                 generatorButton.addListener((evt) -> {
                     if (evt instanceof InputEvent && ((InputEvent) evt).getType() == InputEvent.Type.enter) {
                         GenGalaxyWindow.this.getStage().setScrollFocus(evt.getListenerActor());
                     }
                     return false;
                 });
-                buttons.put(generator.getDisplayName(), generatorButton);
+
+                buttons.put(generatorName.get(), generatorButton);
+
                 if (generator == this.starlaneGenerator) {
                     generatorButton.setDisabled(true);
                     currentlyActiveButton.lazySet(generatorButton);
@@ -255,7 +282,7 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             }
         });
 
-        this.scenarioButton = new RunnableTextraButton("Scenario [GRAY](" + this.currentScenarioSource.getName() + ")[]", Styles.getInstance().buttonStyle, (scenarioSourceButton) -> {
+        this.scenarioButton = new RunnableTextraButton(this.translate("dialog.galgen.button.scenario"), Styles.getInstance().buttonStyle, (scenarioSourceButton) -> {
             this.enableCurrentDialogButton();
             scenarioSourceButton.setDisabled(true);
             this.dialog = SubDialog.SCENARIO_SOURCES;
@@ -263,25 +290,40 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             AtomicReference<Button> currentlyActiveButton = new AtomicReference<>();
             List<Object> scenarios = new ArrayList<>();
             scenarios.addAll(Scenario.loadScenarios());
+
+            // TODO the custom_empires scenario can be configured more throughly
+
             for (ScenarioSource scenario : ProceduralScenarioSource.values()) {
                 scenarios.add(scenario);
             }
+
             for (Object scenario : scenarios) {
-                ScenarioSource scenarioSource = (ScenarioSource) scenario;
-                Button scenarioButton = new RunnableTextraButton(Objects.requireNonNull(scenarioSource.getName()), Styles.getInstance().buttonStyle, (clickedOption) -> {
+                ScenarioSource scenarioSource = (ScenarioSource) Objects.requireNonNull(scenario);
+
+                Supplier<@NotNull String> scenarioName;
+
+                if (scenarioSource instanceof I18NCapable) {
+                    scenarioName = ((I18NCapable) scenarioSource).s2dmenues$getLocalisation();
+                } else {
+                    scenarioName = () -> Objects.toString(scenarioSource.getName());
+                }
+
+                Button scenarioButton = new RunnableTextraButton(scenarioName, Styles.getInstance().buttonStyle, (clickedOption) -> {
                     this.currentScenarioSource = scenarioSource;
-                    scenarioSourceButton.setText("Scenario [GRAY](" + this.currentScenarioSource.getName() + ")[]");
                     currentlyActiveButton.get().setDisabled(false);
                     currentlyActiveButton.lazySet(clickedOption);
                     clickedOption.setDisabled(true);
                 });
+
                 scenarioButton.addListener((evt) -> {
                     if (evt instanceof InputEvent && ((InputEvent) evt).getType() == InputEvent.Type.enter) {
                         GenGalaxyWindow.this.getStage().setScrollFocus(evt.getListenerActor());
                     }
                     return false;
                 });
-                buttons.put(scenarioSource.getName(), scenarioButton);
+
+                buttons.put(scenarioName.get(), scenarioButton); // Key is just to have a consistent order.
+
                 if (scenarioSource == this.currentScenarioSource) {
                     scenarioButton.setDisabled(true);
                     currentlyActiveButton.lazySet(scenarioButton);
@@ -295,9 +337,8 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
                 this.masterSplitPane.setSplitAmount(0.8F);
             }
         });
-        this.closeButton = new RunnableTextraButton("Close", Styles.getInstance().cancelButtonStyle, (Runnable) GenGalaxyWindow.this::hide);
         this.galaxyPreview = new GalaxyPreviewWidget(this);
-        this.openGeneratorOptionsButton = new RunnableTextraButton("Generator options", Styles.getInstance().buttonStyle, this::openGeneratorOptions);
+        this.openGeneratorOptionsButton = new RunnableTextraButton(this.translate("dialog.galgen.button.generator_options"), Styles.getInstance().buttonStyle, this::openGeneratorOptions);
 
         VerticalGroup options = new VerticalGroup();
 
@@ -309,10 +350,9 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
         options.addActor(this.starAdjustmentsButton);
         options.addActor(this.starlaneGeneratorButton);
         options.addActor(this.scenarioButton);
-        options.addActor(this.closeButton);
         options.addActor(new NOPActor(15, 15));
 
-        this.getContentTable().add(this.masterSplitPane).top().left().grow();
+        this.getContentTable().add(this.masterSplitPane).center().left().grow();
 
         this.contentTableUpper.add(options).right().bottom().pad(8F);
         this.contentTableUpper.add(this.galaxyPreview).left().top().grow().pad(8F);
@@ -322,10 +362,58 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
         this.setGalaxySize(5_000);
     }
 
+    @Override
+    @Contract(pure = true)
     @NotNull
-    public GenGalaxyWindow addCloseAction(@NotNull Runnable action) {
-        this.closeButton.addListener(new RunnableClickListener(action));
-        return this;
+    public String applyPlaceholder(@NotNull String key) {
+        switch (key) {
+        case "size":
+            return Integer.toString(this.galaxySize);
+        case "starlanes.generator":
+            return S2DI18N.translate(this.starlaneGenerator).get();
+        case "scenario.name":
+            if (this.currentScenarioSource instanceof I18NCapable) {
+                return ((I18NCapable) this.currentScenarioSource).s2dmenues$getLocalisation().get();
+            } else {
+                return Objects.toString(this.currentScenarioSource.getName());
+            }
+        case "adjustment":
+            if (this.adjustmentMethod instanceof I18NCapable) {
+                return ((I18NCapable) this.adjustmentMethod).s2dmenues$getLocalisation().get();
+            } else {
+                return S2DI18N.s2d("registries.adjustments.galimulator." + this.adjustmentMethod.name().toLowerCase(Locale.ROOT)).get();
+            }
+        case "generator.moving_planets.planets":
+            return Integer.toString(ReflectionHacks.getPlanetaryStarGeneratorPlanetCount());
+        case "generator.moving_generic.velocity":
+            return Float.toString(((VelocityMovingStarGenerator) this.mapdata.getGenerator()).s2dmenues$getVelocity());
+        case "generator.moving_spiral.core":
+            return Float.toString(((MovingSpiralStarGenerator) this.mapdata.getGenerator()).s2dmenues$getCoreSize());
+        case "generator.moving_spiral.fudge":
+            return Float.toString(((MovingSpiralStarGenerator) this.mapdata.getGenerator()).s2dmenues$getOrbitalFudge());
+        case "generator.moving_spiral.rotation":
+            return Float.toString(((MovingSpiralStarGenerator) this.mapdata.getGenerator()).s2dmenues$getSpeed());
+        case "generator.moving_spiral.undulation":
+            return Float.toString(((MovingSpiralStarGenerator) this.mapdata.getGenerator()).s2dmenues$getUndulation());
+        case "generator.fractal.seed":
+            return Objects.toString(((FractalStarGenerator) this.mapdata.getGenerator()).seedString);
+        case "generator.fractal.land":
+            if (((FractalStarGenerator) this.mapdata.getGenerator()).drawLand) {
+                return S2DI18N.s2d("boolean.generic_true").get();
+            } else {
+                return S2DI18N.s2d("boolean.generic_false").get();
+            }
+        case "generator.fractal.aspect_ratio": {
+            String registryName = Objects.toString(((FractalStarGenerator) this.mapdata.getGenerator()).aspectRatio).toLowerCase(Locale.ROOT);
+            return S2DI18N.s2d("registries.aspect_ratio.galimulator." + registryName).get();
+        }
+        case "generator.fractal.algorithm": {
+            String registryName = Objects.toString(((FractalStarGenerator) this.mapdata.getGenerator()).landGenerator).toLowerCase(Locale.ROOT);
+            return S2DI18N.s2d("registries.fractal_algo.galimulator." + registryName).get();
+        }
+        default:
+            return "%UnknownKey:'" + key + "'%";
+        }
     }
 
     @Override
@@ -378,15 +466,17 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
 
             Table optionTable = new Table();
 
-            TextraButton fractalAlgoHeader = new RunnableTextraButton("Fractal algorithm", Styles.getInstance().buttonStyle, () -> {
+            TextraButton fractalAlgoHeader = new RunnableTextraButton(this.translate("dialog.galgen.button.fractal.algorithm"), Styles.getInstance().buttonStyle, () -> {
                 // NOP
             });
 
             HorizontalGroup fractalAlgoOptions = new HorizontalGroup().wrap(true);
-            Button[] algorithmButtons = new TextButton[FractalStarGenerator.LandGenerator.values().length];
+            RunnableTextraButton[] algorithmButtons = new RunnableTextraButton[FractalStarGenerator.LandGenerator.values().length];
             AtomicReference<Button> currentActiveButton = new AtomicReference<>();
+
             for (FractalStarGenerator.LandGenerator algo : FractalStarGenerator.LandGenerator.values()) {
-                Button algorithmButton = new RunnableTextraButton(Objects.toString(algo), Styles.getInstance().buttonStyle, (clickedButton) -> {
+                String registryName = Objects.toString(algo).toLowerCase(Locale.ROOT);
+                RunnableTextraButton algorithmButton = new RunnableTextraButton(S2DI18N.s2d("registries.fractal_algo.galimulator." + registryName), Styles.getInstance().buttonStyle, (clickedButton) -> {
                     for (Button button : algorithmButtons) {
                         button.setDisabled(false);
                     }
@@ -395,53 +485,59 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
                     fsg.a(algo);
                     this.galaxyPreview.reset();
                 });
+
                 if (algo == fsg.landGenerator) {
                     currentActiveButton.set(algorithmButton);
                     algorithmButton.setDisabled(true);
                 }
                 algorithmButtons[algo.ordinal()] = algorithmButton;
             }
+
             for (Actor button : algorithmButtons) {
                 fractalAlgoOptions.addActor(button);
             }
+
             optionTable.add(fractalAlgoHeader).left().growX().row();
             optionTable.add(fractalAlgoOptions).growX().row();
 
-            TextraButton aspectRatioHeader = new RunnableTextraButton("Aspect ratio [GRAY](Note: The preview cannot properly represent the current aspect ratio.)[]", Styles.getInstance().buttonStyle, () -> {
+            TextraButton aspectRatioHeader = new RunnableTextraButton(this.translate("dialog.galgen.button.fractal.aspect_ratio"), Styles.getInstance().buttonStyle, () -> {
                 // NOP
             });
 
             HorizontalGroup aspectRatioGroup = new HorizontalGroup().wrap(true);
             TextraButton[] aspectRatioButtons = new TextraButton[FractalStarGenerator.AspectRatio.values().length];
+
             for (FractalStarGenerator.AspectRatio aspectRatio : FractalStarGenerator.AspectRatio.values()) {
-                aspectRatioButtons[aspectRatio.ordinal()] = new RunnableTextraButton(Objects.toString(aspectRatio), Styles.getInstance().buttonStyle, (clickedButton) -> {
+                String registryName = Objects.toString(aspectRatio).toLowerCase(Locale.ROOT);
+                aspectRatioButtons[aspectRatio.ordinal()] = new RunnableTextraButton(S2DI18N.s2d("registries.aspect_ratio.galimulator." + registryName), Styles.getInstance().buttonStyle, (clickedButton) -> {
                     aspectRatioButtons[fsg.aspectRatio.ordinal()].setDisabled(false);
                     clickedButton.setDisabled(true);
                     fsg.a(aspectRatio);
                     this.galaxyPreview.reset();
                 });
+
                 if (fsg.aspectRatio == aspectRatio) {
                     aspectRatioButtons[aspectRatio.ordinal()].setDisabled(true);
                 }
             }
+
             for (TextraButton button : aspectRatioButtons) {
                 aspectRatioGroup.addActor(button);
             }
+
             optionTable.add(aspectRatioHeader).left().growX().row();
             optionTable.add(aspectRatioGroup).growX().row();
 
-            TextraButton setSeedButton = UIUtil.createTextInputButton("Set seed", () -> Objects.toString(fsg.seedString), seed -> {
+            TextraButton setSeedButton = UIUtil.createTextInputButton(this.translate("dialog.galgen.button.fractal.seed"), () -> Objects.toString(fsg.seedString), seed -> {
                 fsg.seedString = seed;
                 this.galaxyPreview.reset();
                 fsg.generateMap();
             });
 
-            TextraButton drawLandButton = new RunnableTextraButton("Draw land [GRAY](" + fsg.drawLand + ")[]", Styles.getInstance().buttonStyle, (clickedButton) -> {
+            TextraButton drawLandButton = new RunnableTextraButton(this.translate("dialog.galgen.button.fractal.land"), Styles.getInstance().buttonStyle, () -> {
                 fsg.drawLand = !fsg.drawLand;
-                clickedButton.setText("Draw land [GRAY](" + fsg.drawLand + ")[]");
             });
 
-            optionTable.add(new NOPActor(1, 50)).row();
             HorizontalGroup otherButtons = new HorizontalGroup();
             otherButtons.addActor(setSeedButton);
             otherButtons.addActor(drawLandButton);
@@ -452,14 +548,14 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
             this.getStage().setScrollFocus(optionTable);
         } else if (generator instanceof VelocityMovingStarGenerator) {
             VelocityMovingStarGenerator vmg = (VelocityMovingStarGenerator) generator;
-            TextraButton setSpeedButton = UIUtil.createFloatInputButton("Set rotation speed", vmg::s2dmenues$getVelocity, (velocity) -> {
+            TextraButton setSpeedButton = UIUtil.createFloatInputButton(this.translate("dialog.galgen.button.moving_generic.velocity"), (velocity) -> {
                 vmg.s2dmenues$setVelocity(velocity);
                 this.galaxyPreview.reset();
             });
             this.masterSplitPane.setSecondWidget(setSpeedButton);
             this.masterSplitPane.setSplitAmount(0.9F);
         } else if (generator == ProceduralStarGenerator.MOVING_PLANETS) {
-            TextraButton setPlanetCountButton = UIUtil.createUnsignedIntInputButton("Set planet count", ReflectionHacks::getPlanetaryStarGeneratorPlanetCount, (planetCount) -> {
+            TextraButton setPlanetCountButton = UIUtil.createUnsignedIntInputButton(this.translate("dialog.galgen.button.moving_planets.planets"), (planetCount) -> {
                 if (planetCount <= 0) {
                     planetCount = 1;
                 }
@@ -480,36 +576,36 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
 
             Table table = new Table();
 
-            table.add(UIUtil.createFloatInputButton("Set core size", movingSpiralGenerator::s2dmenues$getCoreSize, (value) -> {
+            table.add(UIUtil.createFloatInputButton(this.translate("dialog.galgen.button.moving_spiral.core"), (value) -> {
                 movingSpiralGenerator.s2dmenues$setCoreSize(value);
                 this.galaxyPreview.reset();
             })).left().growX();
 
             table.row();
 
-            table.add(UIUtil.createFloatInputButton("Set orbital fudge", movingSpiralGenerator::s2dmenues$getOrbitalFudge, (value) -> {
+            table.add(UIUtil.createFloatInputButton(this.translate("dialog.galgen.button.moving_spiral.fudge"), (value) -> {
                 movingSpiralGenerator.s2dmenues$setOrbitalFudge(value);
                 this.galaxyPreview.reset();
             })).left().growX();
 
             table.row();
 
-            table.add(UIUtil.createFloatInputButton("Set rotation speed", movingSpiralGenerator::s2dmenues$getSpeed, (value) -> {
+            table.add(UIUtil.createFloatInputButton(this.translate("dialog.galgen.button.moving_spiral.rotation"), (value) -> {
                 movingSpiralGenerator.s2dmenues$setSpeed(value);
                 this.galaxyPreview.reset();
             })).left().growX();
 
             table.row();
 
-            table.add(UIUtil.createFloatInputButton("Set undulation", movingSpiralGenerator::s2dmenues$getUndulation, (value) -> {
+            table.add(UIUtil.createFloatInputButton(this.translate("dialog.galgen.button.moving_spiral.undulation"), (value) -> {
                 movingSpiralGenerator.s2dmenues$setUndulation(value);
                 this.galaxyPreview.reset();
             })).left().growX();
 
             table.row();
 
-            ScrollPane scrollPAne = new ScrollPane(table, Styles.getInstance().scrollPaneStyle);
-            this.masterSplitPane.setSecondWidget(scrollPAne);
+            ScrollPane scrollPane = new ScrollPane(table, Styles.getInstance().scrollPaneStyle);
+            this.masterSplitPane.setSecondWidget(scrollPane);
             this.masterSplitPane.setSplitAmount(0.73F);
             this.getStage().setScrollFocus(table);
         }
@@ -518,7 +614,6 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
     @NotNull
     public GenGalaxyWindow setGalaxySize(int size) {
         this.galaxySize = size;
-        this.galaxySizeButton.setText("Galaxy size: [GRAY]" + this.galaxySize + "[]");
         this.galaxyPreview.reset();
         return this;
     }
@@ -541,7 +636,6 @@ public class GenGalaxyWindow extends Dialog implements Disposable {
     public GenGalaxyWindow show(Stage stage) {
         super.show(stage);
         this.setBounds(16F, 16F, stage.getWidth() - 32F, stage.getHeight() - 32F);
-        this.getTitleLabel().setAlignment(Align.left);
         return this;
     }
 }

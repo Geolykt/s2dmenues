@@ -22,13 +22,13 @@ public class LAFAquaDialog extends S2DDialog {
         this.setResizeBorder(16);
         this.setMovable(true);
 
-        this.closeButton = new RunnableTextraButton(S2DI18N.s2d("laf.dialog.close"), Styles.getInstance().cancelButtonStyle, (Runnable) this::hide);
+        this.closeButton = new RunnableTextraButton(S2DI18N.s2d("laf.dialog.button.close"), Styles.getInstance().cancelButtonStyle, (Runnable) this::hide);
         this.getButtonTable().add(this.closeButton);
 
         this.titleTable.clear();
         this.removeActor(this.titleTable);
         this.titleLabel.setAlignment(Align.center);
-        this.getContentTable().add(this.titleLabel).colspan(2).top().fillX().height(48).row();
+        this.getContentTable().add(this.titleLabel).colspan(2).top().growX().height(48).row();
     }
 
     @NotNull

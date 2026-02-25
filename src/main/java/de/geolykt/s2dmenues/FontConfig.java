@@ -235,7 +235,6 @@ public class FontConfig {
 
             byte[] pngData = Files.readAllBytes(this.pngPath);
             Pixmap pixmap = new Pixmap(pngData, 0, pngData.length);
-            LoggerFactory.getLogger(FontConfig.class).info("Pixmap data for {}: {} {}x{}@{}", this.textureName, pixmap, pixmap.getWidth(), pixmap.getHeight(), pixmap.getFormat());
 
             if (pixmap.getWidth() <= 2048 || pixmap.getHeight() <= 2048) {
                 evt.packTexture(this.textureName, pixmap);

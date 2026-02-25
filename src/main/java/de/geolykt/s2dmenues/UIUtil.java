@@ -3,7 +3,6 @@ package de.geolykt.s2dmenues;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
-import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 import org.jetbrains.annotations.NotNull;
@@ -20,50 +19,37 @@ import de.geolykt.s2dmenues.components.msdf.RunnableTextraButton;
 import de.geolykt.starloader.api.utils.FloatConsumer;
 
 public class UIUtil {
-
-    @FunctionalInterface
-    public static interface FloatSupplier {
-        public float getAsFloat();
-    }
-
     @NotNull
-    public static TextraButton createTextInputButton(@NotNull String description, @NotNull Supplier<@NotNull String> currentValueSupplier, @NotNull Consumer<@NotNull String> currentValueSetter) {
-        return new RunnableTextraButton(description + " [GRAY](" + currentValueSupplier.get() + ")[]", Styles.getInstance().buttonStyle, (textButton) -> {
-            UIUtil.showInputDialog(description, Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), value -> {
-                currentValueSetter.accept(value);
-                textButton.setText(description + " [GRAY](" + currentValueSupplier.get() + ")[]");
-            }, currentValueSupplier.get());
+    public static TextraButton createTextInputButton(@NotNull Supplier<@NotNull String> description, @NotNull Supplier<@NotNull String> currentValueSupplier, @NotNull Consumer<@NotNull String> currentValueSetter) {
+        return new RunnableTextraButton(description, Styles.getInstance().buttonStyle, (textButton) -> {
+            UIUtil.showInputDialog(description.get(), Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), currentValueSetter, currentValueSupplier.get());
         });
     }
 
     @NotNull
-    public static TextraButton createFloatInputButton(@NotNull String description, @NotNull FloatSupplier currentValueSupplier, @NotNull FloatConsumer currentValueSetter) {
-        return new RunnableTextraButton(description + " [GRAY](" + currentValueSupplier.getAsFloat() + ")[]", Styles.getInstance().buttonStyle, (textButton) -> {
-            UIUtil.showInputDialogFloat(description, Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), value -> {
-                currentValueSetter.accept(value);
-                textButton.setText(description + " [GRAY](" + currentValueSupplier.getAsFloat() + ")[]");
-            });
+    public static TextraButton createFloatInputButton(@NotNull Supplier<@NotNull String> description, @NotNull FloatConsumer currentValueSetter) {
+        return new RunnableTextraButton(description, Styles.getInstance().buttonStyle, (textButton) -> {
+            UIUtil.showInputDialogFloat(description.get(), Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), currentValueSetter);
         });
     }
 
     @NotNull
-    public static TextraButton createUnsignedIntInputButton(@NotNull String description, @NotNull IntSupplier currentValueSupplier, @NotNull IntConsumer currentValueSetter) {
-        return new RunnableTextraButton(description + " [GRAY](" + currentValueSupplier.getAsInt() + ")[]", Styles.getInstance().buttonStyle, (textButton) -> {
-            UIUtil.showInputDialogUnsignedInt(description, Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), value -> {
-                currentValueSetter.accept(value);
-                textButton.setText(description + " [GRAY](" + currentValueSupplier.getAsInt() + ")[]");
-            });
+    public static TextraButton createUnsignedIntInputButton(@NotNull Supplier<@NotNull String> description, @NotNull IntConsumer currentValueSetter) {
+        return new RunnableTextraButton(description, Styles.getInstance().buttonStyle, (textButton) -> {
+            UIUtil.showInputDialogUnsignedInt(description.get(), Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), currentValueSetter);
         });
     }
 
     public static void showInputDialog(@NotNull String title, @NotNull Stage stage, @NotNull Consumer<@NotNull String> onAccept, @NotNull String defaultInputValue) {
         Dialog setCountdialog = new Dialog(title, Styles.getInstance().windowStylePlastic);
         TextField inputField = new TextField(defaultInputValue, Styles.getInstance().textFieldStyle);
-        Actor dialogCancel = new RunnableTextraButton("Cancel", Styles.getInstance().cancelButtonStyle, (Runnable) setCountdialog::hide);
-        Actor dialogConfirm = new RunnableTextraButton("Confirm", Styles.getInstance().confirmButtonStyle, () -> {
+        Actor dialogCancel = new RunnableTextraButton(S2DI18N.s2d("legacylaf.uiutil.cancel"), Styles.getInstance().cancelButtonStyle, (Runnable) setCountdialog::hide);
+
+        Actor dialogConfirm = new RunnableTextraButton(S2DI18N.s2d("legacylaf.uiutil.confirm"), Styles.getInstance().confirmButtonStyle, () -> {
             setCountdialog.hide();
             onAccept.accept(Objects.requireNonNull(inputField.getText()));
         });
+
         setCountdialog.getContentTable().add(inputField).pad(10).padTop(40).growX();
         setCountdialog.getButtonTable().add(dialogConfirm).pad(5);
         setCountdialog.getButtonTable().add(dialogCancel).pad(5);

@@ -122,7 +122,7 @@ public class MainMenuProvider {
             MainMenuProvider.disableAll(stage.getRoot());
             GenGalaxyWindow window = genGalaxyWindow.get();
             if (window == null) {
-                window = new GenGalaxyWindow(Styles.getInstance().windowStyleTranslucent);
+                window = new GenGalaxyWindow();
                 window.addCloseAction(() -> {
                     MainMenuProvider.enableAll(stage.getRoot());
                 });

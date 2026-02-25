@@ -17,16 +17,133 @@ import java.util.TreeMap;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
 import de.geolykt.starloader.api.NamespacedKey;
+import de.geolykt.starloader.api.empire.StarlaneGenerator;
 import de.geolykt.starloader.util.JavaInterop;
 
 public final class S2DI18N {
+
+    public static class ConfiguredTranslateable implements Supplier<@NotNull String> {
+        @NotNull
+        private final Map<NamespacedKey, PlaceholderContext> placeholderContexts = new HashMap<>();
+        @NotNull
+        private final NamespacedKey translationkey;
+        @Nullable
+        private Supplier<@NotNull String> defaultValue = null;
+
+        @Contract(pure = true)
+        protected ConfiguredTranslateable(@NotNull NamespacedKey translationKey) {
+            this.translationkey = translationKey;
+        }
+
+        @NotNull
+        @Contract(mutates = "this", pure = false, value = "null, _ -> fail; _, null -> fail; !null, !null -> this")
+        public ConfiguredTranslateable withContext(@NotNull NamespacedKey nsKey, @NotNull PlaceholderContext placeholders) {
+            this.placeholderContexts.put(Objects.requireNonNull(nsKey, "'nsKey' may not be null"), Objects.requireNonNull(placeholders, "'placeholders' may not be null"));
+            return this;
+        }
+
+        @Override
+        @NotNull
+        @Contract(pure = true)
+        public String get() {
+            String value = S2DI18N.activeTranslation.get(this.translationkey);
+
+            if (value == null) {
+                Supplier<@NotNull String> defaultValue = this.defaultValue;
+
+                if (defaultValue == null) {
+                    return this.translationkey.getNamespace() + ":" + this.translationkey.getKey();
+                }
+
+                value = Objects.requireNonNull(defaultValue.get(), () -> ("Default value provider returned null for " + this.translationkey));
+            }
+
+            int percentIndex = value.indexOf('%');
+
+            if (percentIndex < 0) {
+                // No placeholders. Not further to do.
+                return value;
+            }
+
+            StringBuilder builder = new StringBuilder(value.length());
+
+            int priorIndex = 0;
+
+            surrogateLoop:
+            do {
+                builder.append(value, priorIndex, percentIndex);
+
+                if (value.codePointAt(percentIndex + 1) == '%') {
+                    // '%' escape symbol
+                    builder.append('%');
+                    priorIndex = percentIndex + 1;
+                    percentIndex = value.indexOf('%', priorIndex);
+                } else {
+                    // Placeholder replacement logic
+                    int colonIndex = value.indexOf(':', percentIndex);
+
+                    if (colonIndex < 0) {
+                        throw new IllegalStateException("Cannot parse placeholders in string: '" + value + "': Colon missing. '%' symbols can be escaped through \"%%\".");
+                    }
+
+                    String namespace = value.substring(percentIndex + 1, colonIndex);
+
+                    int dotIndex = value.indexOf('.', colonIndex);
+
+                    while (dotIndex >= 0) {
+                        String key = value.substring(colonIndex + 1, dotIndex);
+                        NamespacedKey nsKey = NamespacedKey.fromString(namespace, key);
+                        PlaceholderContext context = this.placeholderContexts.get(nsKey);
+
+                        if (context != null) {
+                            percentIndex = value.indexOf('%', dotIndex);
+
+                            if (percentIndex < 0) {
+                                throw new IllegalStateException("Cannot parse placeholders in string: '" + value + "': No closing '%'.");
+                            }
+
+                            builder.append(context.applyPlaceholder(value.substring(dotIndex + 1, percentIndex)));
+                            priorIndex = percentIndex + 1;
+                            percentIndex = value.indexOf('%', priorIndex);
+
+                            continue surrogateLoop;
+                        } else {
+                            dotIndex = value.indexOf('.', dotIndex + 1);
+                        }
+                    }
+
+                    throw new IllegalStateException("Cannot parse placeholders in string: '" + value + "': Placeholder context missing. '%' symbols can be escaped through \"%%\".");
+                }
+            } while (percentIndex >= 0);
+
+            builder.append(value, priorIndex, value.length());
+
+            return builder.toString();
+        }
+
+        @NotNull
+        @Contract(mutates = "this", pure = false, value = "_ -> this")
+        public ConfiguredTranslateable withDefault(@Nullable Supplier<@NotNull String> defaultValue) {
+            this.defaultValue = defaultValue;
+            return this;
+        }
+    }
+
+    public static interface PlaceholderContext {
+        @Contract(pure = true)
+        @NotNull
+        public String applyPlaceholder(@NotNull String key);
+    }
+
     @NotNull
     private static Locale activeLocale = Locale.ENGLISH;
 
@@ -59,7 +176,7 @@ public final class S2DI18N {
     }
 
     public static void loadLanguage(@NotNull Locale language, @NotNull JSONObject translations) {
-        Map<NamespacedKey, String> translationMappings = new HashMap<>();
+        Map<NamespacedKey, String> translationMappings = S2DI18N.LANGUAGES.getOrDefault(language, new HashMap<>());
 
         for (String keyName : translations.keySet()) {
             translationMappings.put(NamespacedKey.fromString(keyName), translations.getString(keyName));
@@ -69,9 +186,9 @@ public final class S2DI18N {
     }
 
     @NotNull
-    public static Supplier<@NotNull String> s2d(@NotNull String key) {
-        NamespacedKey nsKey = NamespacedKey.fromString("s2dmenues", key);
-        return () -> S2DI18N.translate(nsKey);
+    @Contract(pure = true)
+    public static ConfiguredTranslateable s2d(@NotNull String key) {
+        return S2DI18N.translate(NamespacedKey.fromString("s2dmenues", key));
     }
 
     private static void saveConfig() {
@@ -135,14 +252,18 @@ public final class S2DI18N {
     }
 
     @NotNull
-    public static String translate(@NotNull NamespacedKey key) {
-        String value = S2DI18N.activeTranslation.get(key);
+    @Contract(pure = true)
+    public static ConfiguredTranslateable translate(@NotNull NamespacedKey key) {
+        return new ConfiguredTranslateable(key);
+    }
 
-        if (value == null) {
-            return key.getNamespace() + ":" + key.getKey();
-        }
+    @NotNull
+    @Contract(pure = true)
+    public static ConfiguredTranslateable translate(@NotNull StarlaneGenerator generator) {
+        String generatorKey = Objects.requireNonNull(generator, "'generator' may not be null").getRegistryKey().toString().toLowerCase(Locale.ROOT);
+        String key = "registries.starlanes." + generatorKey;
 
-        return value;
+        return S2DI18N.s2d(key).withDefault(generator::getDisplayName);
     }
 
     private S2DI18N() {
