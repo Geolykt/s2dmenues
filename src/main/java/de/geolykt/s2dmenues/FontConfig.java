@@ -3,12 +3,10 @@ package de.geolykt.s2dmenues;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +18,6 @@ import java.util.stream.Stream;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
@@ -271,18 +268,15 @@ public class FontConfig {
         return instance;
     }
 
-    static void start(@NotNull Path modDataDir) throws IOException {
+    static void start(@NotNull Path modDataDir, @NotNull JSONObject fontJson) throws IOException {
         if (FontConfig.instance != null) {
             throw new IllegalStateException("Instance already started.");
         }
 
-        FontConfig.instance = new FontConfig(modDataDir);
+        FontConfig.instance = new FontConfig(modDataDir, fontJson);
     }
 
     private boolean discoveredBuiltins = false;
-
-    @NotNull
-    private final Path fontConfigFile;
 
     @NotNull
     private final Map<String, @NotNull FontPrimitive> fontNameLookup = new TreeMap<>();
@@ -293,25 +287,17 @@ public class FontConfig {
     @NotNull
     private String preferredFontName = "Built-in font 'SPACE'";
 
-    private FontConfig(@NotNull Path modDataDir) throws IOException {
+    @NotNull
+    private final JSONObject configJSON;
+
+    private FontConfig(@NotNull Path modDataDir, @NotNull JSONObject fontJson) throws IOException {
         Path fontDir = modDataDir.resolve("fonts");
+        this.configJSON = fontJson;
 
-        this.fontConfigFile = fontDir.resolve("config.json");
+        String preferredFontName = fontJson.optString("preferredFont", null);
 
-        if (!Files.notExists(this.fontConfigFile)) {
-            JSONObject jsonObject;
-            try {
-                jsonObject = new JSONObject(new String(Files.readAllBytes(this.fontConfigFile), StandardCharsets.UTF_8));
-            } catch (JSONException | IOException e) {
-                LoggerFactory.getLogger(FontConfig.class).error("Unable to load currently present configuration file. Using default configurations instead.", e);
-                jsonObject = new JSONObject();
-            }
-
-            String preferredFontName = jsonObject.optString("preferredFont", null);
-
-            if (preferredFontName != null) {
-                this.preferredFontName = preferredFontName;
-            }
+        if (preferredFontName != null) {
+            this.preferredFontName = preferredFontName;
         }
 
         if (Files.exists(fontDir)) {
@@ -342,8 +328,6 @@ public class FontConfig {
                     } catch (IOException e) {
                         throw new UncheckedIOException(e);
                     }
-                } else if (this.fontConfigFile.equals(path)) {
-                    return Stream.empty();
                 } else {
                     return Stream.of(new BoxedPath(null, path));
                 }
@@ -450,27 +434,10 @@ public class FontConfig {
         }
     }
 
-    private synchronized void saveConfig() {
-        JSONObject jsonObject;
-
-        if (Files.notExists(this.fontConfigFile)) {
-            jsonObject = new JSONObject();
-        } else {
-            try {
-                jsonObject = new JSONObject(new String(Files.readAllBytes(this.fontConfigFile), StandardCharsets.UTF_8));
-            } catch (JSONException | IOException e) {
-                LoggerFactory.getLogger(FontConfig.class).error("Unable to load currently present configuration file. Configuration might get overwritten.", e);
-                jsonObject = new JSONObject();
-            }
-        }
-
-        jsonObject.put("preferredFont", this.preferredFontName);
-
-        try {
-            Files.write(this.fontConfigFile, jsonObject.toString(2).getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
-        } catch (JSONException | IOException e) {
-            LoggerFactory.getLogger(FontConfig.class).error("Unable to write to font configuration file.", e);
-        }
+    @NotNull
+    public JSONObject saveConfig() {
+        this.configJSON.put("preferredFont", this.preferredFontName);
+        return this.configJSON;
     }
 
     public void setPreferredFont(@NotNull FontPrimitive font) {
@@ -483,7 +450,7 @@ public class FontConfig {
         this.preferredFontName = Objects.requireNonNull(Objects.requireNonNull(font, "'font' may not be null").getName(), "'font.getName()' may not return null");
         this.preferredFont = font;
 
-        this.saveConfig();
+        S2DMenues.saveConfig();
 
         if (previousActive != null) {
             previousActive.close(); // Optionally dispose unused resources

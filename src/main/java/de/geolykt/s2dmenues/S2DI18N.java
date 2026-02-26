@@ -6,7 +6,6 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.HashMap;
@@ -23,7 +22,6 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.slf4j.LoggerFactory;
 
 import de.geolykt.starloader.api.NamespacedKey;
 import de.geolykt.starloader.api.empire.StarlaneGenerator;
@@ -147,6 +145,9 @@ public final class S2DI18N {
     @NotNull
     private static Locale activeLocale = Locale.ENGLISH;
 
+    @Nullable
+    private static JSONObject configJSON;
+
     @NotNull
     @Unmodifiable
     private static Map<NamespacedKey, String> activeTranslation = Collections.emptyMap();
@@ -166,9 +167,9 @@ public final class S2DI18N {
     }
 
     private static void loadBuiltinLanguage(@NotNull String name) throws IOException {
-        try (InputStream in = S2DI18N.class.getClassLoader().getResourceAsStream("" + name + ".json")) {
+        try (InputStream in = S2DI18N.class.getClassLoader().getResourceAsStream(name + ".json")) {
             if (in == null) {
-                throw new IOException("Resource '/" + name + ".json' couldn't be found in classloader '" + JavaInterop.getClassloaderName(S2DI18N.class.getClassLoader()) + "'.");
+                throw new IOException("Resource '" + name + ".json' couldn't be found in classloader '" + JavaInterop.getClassloaderName(S2DI18N.class.getClassLoader()) + "'.");
             }
 
             S2DI18N.loadLanguage(Locale.forLanguageTag(name), new JSONObject(new String(JavaInterop.readAllBytes(in), StandardCharsets.UTF_8)));
@@ -191,40 +192,31 @@ public final class S2DI18N {
         return S2DI18N.translate(NamespacedKey.fromString("s2dmenues", key));
     }
 
-    private static void saveConfig() {
-        JSONObject jsonObject = new JSONObject();
+    @NotNull
+    static JSONObject saveConfig() {
+        JSONObject jsonObject = S2DI18N.configJSON;
+
+        if (jsonObject == null) {
+            throw new AssertionError();
+        }
+
         jsonObject.put("locale", S2DI18N.activeLocale.toLanguageTag());
 
-        try {
-            Files.write(S2DMenues.MOD_DATA_DIR.resolve("i18n.json"), jsonObject.toString(2).getBytes(StandardCharsets.UTF_8), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        } catch (JSONException | IOException e) {
-            LoggerFactory.getLogger(S2DI18N.class).error("Unable to save I18N configuration file.", e);
-        }
+        return jsonObject;
     }
 
     public static void setActiveLocale(@NotNull Locale activeLocale) {
         S2DI18N.activeLocale = Objects.requireNonNull(activeLocale, "'activeLocale' may not be null.");
         S2DI18N.activeTranslation = Collections.unmodifiableMap(S2DI18N.LANGUAGES.getOrDefault(S2DI18N.activeLocale, Collections.emptyMap()));
-        S2DI18N.saveConfig();
+        S2DMenues.saveConfig();
     }
 
-    static void start() throws IOException {
-        // Load configuration
-        Path configFile = S2DMenues.MOD_DATA_DIR.resolve("i18n.json");
-        if (Files.exists(configFile)) {
-            JSONObject jsonObject;
-            try {
-                jsonObject = new JSONObject(new String(Files.readAllBytes(configFile), StandardCharsets.UTF_8));
-            } catch (IOException e) {
-                LoggerFactory.getLogger(S2DI18N.class).warn("Unable to read localisation configuration file. Default are used instead.", e);
-                jsonObject = new JSONObject();
-            }
+    static void start(@NotNull JSONObject jsonObject) throws IOException {
+        S2DI18N.configJSON = jsonObject;
+        String language = jsonObject.optString("locale", null);
 
-            String language = jsonObject.optString("locale", null);
-
-            if (language != null) {
-                S2DI18N.activeLocale = Locale.forLanguageTag(language);
-            }
+        if (language != null) {
+            S2DI18N.activeLocale = Locale.forLanguageTag(language);
         }
 
         Path languageDir = S2DMenues.MOD_DATA_DIR.resolve("languages");

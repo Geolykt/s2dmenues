@@ -2,9 +2,14 @@ package de.geolykt.s2dmenues;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
 import com.badlogic.gdx.Gdx;
@@ -30,11 +35,46 @@ public class S2DMenues extends Extension {
     @NotNull
     public static final Path MOD_DATA_DIR = Starloader.getInstance().getModDirectory().resolve(S2DMenues.MOD_ID);
 
+    @Nullable
+    private static JSONObject loadedConfig;
+
+    public static void loadConfig() throws IOException {
+        Path loadedConfigPath = S2DMenues.MOD_DATA_DIR.resolve("config.json");
+
+        @NotNull
+        JSONObject loadedConfig;
+        if (Files.notExists(loadedConfigPath)) {
+            loadedConfig = new JSONObject();
+        } else {
+            try {
+                loadedConfig = new JSONObject(new String(Files.readAllBytes(loadedConfigPath), StandardCharsets.UTF_8));
+            } catch (JSONException | IOException e) {
+                LoggerFactory.getLogger(S2DMenues.class).error("Unable to load currently present configuration file. Using default configurations instead.", e);
+                loadedConfig = new JSONObject();
+            }
+        }
+
+        JSONObject fontJson = loadedConfig.optJSONObject("font");
+        JSONObject i18nJson = loadedConfig.optJSONObject("i18n");
+
+        if (fontJson == null) {
+            fontJson = new JSONObject();
+        }
+
+        if (i18nJson == null) {
+            i18nJson = new JSONObject();
+        }
+
+        S2DMenues.loadedConfig = loadedConfig;
+        FontConfig.start(S2DMenues.MOD_DATA_DIR, fontJson);
+        S2DI18N.start(i18nJson);
+    }
+
     @Override
     public void initialize() {
         try {
-            FontConfig.start(S2DMenues.MOD_DATA_DIR);
-            S2DI18N.start();
+            Files.createDirectories(S2DMenues.MOD_DATA_DIR);
+            S2DMenues.loadConfig();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -73,9 +113,26 @@ public class S2DMenues extends Extension {
         });
     }
 
+    public static void saveConfig() {
+        JSONObject loadedConfig = S2DMenues.loadedConfig;
+
+        if (loadedConfig == null) {
+            throw new IllegalStateException("'loadedConfig' is null. #saveConfig called before #loadConfig?");
+        }
+
+        loadedConfig.put("font", FontConfig.getInstance().saveConfig());
+        loadedConfig.put("i18n", S2DI18N.saveConfig());
+
+        try {
+            Files.write(S2DMenues.MOD_DATA_DIR.resolve("config.json"), loadedConfig.toString(2).getBytes(StandardCharsets.UTF_8));
+        } catch (JSONException | IOException e) {
+            LoggerFactory.getLogger(S2DMenues.class).error("Cannot save configuration file.", e);
+        }
+    }
+
     static {
         if (com.badlogic.gdx.Version.isLower(1, 14, 0)) {
-            LoggerFactory.getLogger(S2DMenues.class).info("The runtime version of libGDX is out of date. Using Mass ASM for compatibility.");
+            LoggerFactory.getLogger(S2DMenues.class).warn("The runtime version of libGDX is out of date. Using Mass ASM for compatibility.");
             MinestomRootClassLoader.getInstance().addASMTransformer(new TextraMASMTransformer());
         }
     }
