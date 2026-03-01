@@ -8,13 +8,11 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable;
 import com.github.tommyettinger.textra.Font;
-import com.github.tommyettinger.textra.Styles.ListStyle;
 import com.github.tommyettinger.textra.Styles.SelectBoxStyle;
 import com.github.tommyettinger.textra.TextraSelectBox;
 
 import de.geolykt.s2dmenues.FontConfig;
 import de.geolykt.s2dmenues.Styles;
-import de.geolykt.s2dmenues.components.drawables.LAFAquaBoxDrawable;
 import de.geolykt.starloader.api.gui.Drawing;
 
 public class S2DSelectBox extends TextraSelectBox {

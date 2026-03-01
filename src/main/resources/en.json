@@ -10,6 +10,7 @@
     "s2dmenues:dialog.options.keys.language": "Language",
     "s2dmenues:dialog.options.keys.revised_generator_selection": "Revised galaxy type selection behaviour",
     "s2dmenues:dialog.galgen.title": "Generate galaxy",
+    "s2dmenues:dialog.galgen.error.reflection": "A reflective error occured. Please take a look at the logs. Sorry!",
     "s2dmenues:dialog.galgen.button.confirm": "Start game",
     "s2dmenues:dialog.galgen.button.size": "Star count [GRAY](%s2dmenues:dialogs.generate_galaxy.size%)[]",
     "s2dmenues:dialog.galgen.button.type": "Galaxy type",
@@ -116,5 +117,7 @@
     "s2dmenues:registries.generators.galimulator:placement_generator_mapdata_yugoslavia": "Yugoslavia",
     "s2dmenues:laf.dialog.button.close": "Close",
     "s2dmenues:legacylaf.uiutil.confirm": "Confirm",
-    "s2dmenues:legacylaf.uiutil.cancel": "Cancel"
+    "s2dmenues:legacylaf.uiutil.cancel": "Cancel",
+    "s2dmenues:legacylaf.uiutil.error": "Error",
+    "s2dmenues:legacylaf.uiutil.nan": "Not a valid number: [GRAY]%s2dmenues:legacylaf.uiutil.nan.text%[]"
 }

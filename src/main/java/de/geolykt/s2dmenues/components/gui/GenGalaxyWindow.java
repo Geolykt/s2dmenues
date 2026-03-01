@@ -25,9 +25,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
-import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.SplitPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -47,6 +45,7 @@ import de.geolykt.s2dmenues.bridge.MovingSpiralStarGenerator;
 import de.geolykt.s2dmenues.bridge.ReflectionHacks;
 import de.geolykt.s2dmenues.bridge.VelocityMovingStarGenerator;
 import de.geolykt.s2dmenues.components.NOPActor;
+import de.geolykt.s2dmenues.components.msdf.DynamicTextraLabel;
 import de.geolykt.s2dmenues.components.msdf.RunnableTextraButton;
 import de.geolykt.s2dmenues.incubator.StarPlacementGenerator;
 import de.geolykt.s2dmenues.incubator.StarPlacementGeneratorCategory;
@@ -407,7 +406,6 @@ public class GenGalaxyWindow extends LAFAquaDialog implements Disposable, Placeh
     }
 
     private void onLegacyGeneratorSelection() {
-
         // Display modal
         Collection<StarPlacementGenerator> generators = StarPlacementRegistry.GENERATOR_REGISTRY.valuesView();
         Table optionsTable = new Table();
@@ -488,6 +486,10 @@ public class GenGalaxyWindow extends LAFAquaDialog implements Disposable, Placeh
             UIUtil.showSelectionWindow(e2, Objects.requireNonNull(categories.get(category), "no generator under category"), (generator, e3) -> {
                 this.currentGenerator = generator;
                 this.setMapData((MapData) generator.toLegacyMap());
+
+                if (this.dialog == SubDialog.GENERATOR_OPTIONS) {
+                    this.openGeneratorOptions(); // Force refresh of generator options
+                }
             }, Align.left);
         }, Align.left);
     }
@@ -597,10 +599,8 @@ public class GenGalaxyWindow extends LAFAquaDialog implements Disposable, Placeh
                     planetCount = 1;
                 }
                 if (!ReflectionHacks.setPlanetaryStarGeneratorPlanetCount(planetCount)) {
-                    Dialog noticeDialog = new Dialog("Error", Styles.getInstance().windowStyleTranslucent);
-                    Button cancelNoticeButton = new RunnableTextraButton("Ok", Styles.getInstance().cancelButtonStyle, (Runnable) noticeDialog::hide);
-                    noticeDialog.getContentTable().add(new Label("A reflective error occured. Please take a look at the logs. Sorry!", Styles.getInstance().labelStyleGeneric)).pad(10);
-                    noticeDialog.getButtonTable().add(cancelNoticeButton).pad(5);
+                    LAFAquaDialog noticeDialog = new LAFAquaDialog("legacylaf.uiutil.error");
+                    noticeDialog.getContentTable().add(new DynamicTextraLabel(S2DI18N.s2d("dialog.galgen.error.reflection"))).pad(10);
                     noticeDialog.show(this.getStage());
                 } else {
                     this.galaxyPreview.reset();

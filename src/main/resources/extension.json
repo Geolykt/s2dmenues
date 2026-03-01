@@ -10,7 +10,7 @@
         "repositories" : [
             {
                 "name" : "stianloader-mirror",
-                "url" : "http://localhost/all",
+                "url" : "https://stianloader.org/maven2/all",
                 "mirrorable" : false
             },
             {
@@ -25,10 +25,6 @@
                  "name" : "Jitpack",
                  "url" : "https://jitpack.io/",
                  "mirrorOnly" : true
-             }, {
-                 "name" : "stianloader-central-mirror",
-                 "url" : "https://stianloader.org/central-mirror/",
-                 "mirrorable" : false
              }
         ],
         "artifacts" : [

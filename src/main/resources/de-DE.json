@@ -10,6 +10,7 @@
     "s2dmenues:dialog.options.keys.language": "Sprache",
     "s2dmenues:dialog.options.keys.revised_generator_selection": "Experimentelle Benutzerumgebung für Auswahl des Sternen-Generators",
     "s2dmenues:dialog.galgen.title": "Galaxie generieren",
+    "s2dmenues:dialog.galgen.error.reflection": "Es is ein interner Fehler aufgetreten. Wir bitten um Entschuldigung.",
     "s2dmenues:dialog.galgen.button.confirm": "Spiel starten",
     "s2dmenues:dialog.galgen.button.size": "Anzahl sterne [GRAY](%s2dmenues:dialogs.generate_galaxy.size%)[]",
     "s2dmenues:dialog.galgen.button.type": "Sternengenerator",
@@ -116,5 +117,7 @@
     "s2dmenues:registries.generators.galimulator:placement_generator_mapdata_yugoslavia": "Jugoslawien",
     "s2dmenues:laf.dialog.button.close": "Schließen",
     "s2dmenues:legacylaf.uiutil.confirm": "OK",
-    "s2dmenues:legacylaf.uiutil.cancel": "Abbrechen"
+    "s2dmenues:legacylaf.uiutil.cancel": "Abbrechen",
+    "s2dmenues:legacylaf.uiutil.error": "Fehler",
+    "s2dmenues:legacylaf.uiutil.nan": "Ungültige Eingabe: [GRAY]%s2dmenues:legacylaf.uiutil.nan.text%[]"
 }

@@ -15,53 +15,76 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Button;
-import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.utils.Align;
 import com.github.tommyettinger.textra.Styles.TextButtonStyle;
 import com.github.tommyettinger.textra.TextraButton;
+import com.github.tommyettinger.textra.TextraField;
 
+import de.geolykt.s2dmenues.S2DI18N.PlaceholderContext;
 import de.geolykt.s2dmenues.bridge.I18NCapable;
 import de.geolykt.s2dmenues.components.drawables.LAFAquaBoxDrawable;
 import de.geolykt.s2dmenues.components.drawables.LAFAquaEphemeralButtonDrawable;
 import de.geolykt.s2dmenues.components.event.ActorLifecycle;
+import de.geolykt.s2dmenues.components.gui.LAFAquaDialog;
+import de.geolykt.s2dmenues.components.msdf.DynamicTextraField;
+import de.geolykt.s2dmenues.components.msdf.DynamicTextraLabel;
 import de.geolykt.s2dmenues.components.msdf.RunnableTextraButton;
+import de.geolykt.starloader.api.NamespacedKey;
 import de.geolykt.starloader.api.utils.FloatConsumer;
 
 public class UIUtil {
+    private static class InvalidNumberPlaceholderContext implements PlaceholderContext {
+        @NotNull
+        private final String text;
+
+        @NotNull
+        public static final NamespacedKey REGISTRY_KEY = NamespacedKey.fromString("s2dmenues", "legacylaf.uiutil.nan");
+
+        public InvalidNumberPlaceholderContext(@NotNull String text) {
+            this.text = text;
+        }
+
+        @Override
+        @NotNull
+        public String applyPlaceholder(@NotNull String key) {
+            if (!key.equals("text")) {
+                throw new IllegalArgumentException("Unexpected key: " + key);
+            }
+
+            return this.text;
+        }
+    }
+
     @NotNull
     public static TextraButton createFloatInputButton(@NotNull Supplier<@NotNull String> description, @NotNull FloatConsumer currentValueSetter) {
         return new RunnableTextraButton(description, Styles.getInstance().buttonStyle, (textButton) -> {
-            UIUtil.showInputDialogFloat(description.get(), Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), currentValueSetter);
+            UIUtil.showInputDialogFloat(description, Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), currentValueSetter);
         });
     }
 
     @NotNull
     public static TextraButton createTextInputButton(@NotNull Supplier<@NotNull String> description, @NotNull Supplier<@NotNull String> currentValueSupplier, @NotNull Consumer<@NotNull String> currentValueSetter) {
         return new RunnableTextraButton(description, Styles.getInstance().buttonStyle, (textButton) -> {
-            UIUtil.showInputDialog(description.get(), Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), currentValueSetter, currentValueSupplier.get());
+            UIUtil.showInputDialog(description, Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), currentValueSetter, currentValueSupplier.get());
         });
     }
 
     @NotNull
     public static TextraButton createUnsignedIntInputButton(@NotNull Supplier<@NotNull String> description, @NotNull IntConsumer currentValueSetter) {
         return new RunnableTextraButton(description, Styles.getInstance().buttonStyle, (textButton) -> {
-            UIUtil.showInputDialogUnsignedInt(description.get(), Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), currentValueSetter);
+            UIUtil.showInputDialogUnsignedInt(description, Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), currentValueSetter);
         });
     }
 
-    public static void showInputDialog(@NotNull String title, @NotNull Stage stage, @NotNull Consumer<@NotNull String> onAccept) {
+    public static void showInputDialog(@NotNull Supplier<@NotNull String> title, @NotNull Stage stage, @NotNull Consumer<@NotNull String> onAccept) {
         UIUtil.showInputDialog(title, stage, onAccept, "");
     }
 
-    public static void showInputDialog(@NotNull String title, @NotNull Stage stage, @NotNull Consumer<@NotNull String> onAccept, @NotNull String defaultInputValue) {
-        Dialog setCountdialog = new Dialog(title, Styles.getInstance().windowStylePlastic);
-        TextField inputField = new TextField(defaultInputValue, Styles.getInstance().textFieldStyle);
-        Actor dialogCancel = new RunnableTextraButton(S2DI18N.s2d("legacylaf.uiutil.cancel"), Styles.getInstance().cancelButtonStyle, (Runnable) setCountdialog::hide);
+    public static void showInputDialog(@NotNull Supplier<@NotNull String> title, @NotNull Stage stage, @NotNull Consumer<@NotNull String> onAccept, @NotNull String defaultInputValue) {
+        LAFAquaDialog setCountdialog = new LAFAquaDialog(title, "legacylaf.uiutil.cancel");
+        TextraField inputField = new DynamicTextraField(defaultInputValue, Styles.getInstance().textFieldStyle);
 
         Actor dialogConfirm = new RunnableTextraButton(S2DI18N.s2d("legacylaf.uiutil.confirm"), Styles.getInstance().confirmButtonStyle, () -> {
             setCountdialog.hide();
@@ -70,39 +93,34 @@ public class UIUtil {
 
         setCountdialog.getContentTable().add(inputField).pad(10).padTop(40).growX();
         setCountdialog.getButtonTable().add(dialogConfirm).pad(5);
-        setCountdialog.getButtonTable().add(dialogCancel).pad(5);
 
         setCountdialog.show(stage);
         stage.setKeyboardFocus(inputField);
     }
 
-    public static void showInputDialogFloat(@NotNull String title, @NotNull Stage stage, @NotNull FloatConsumer onAccept) {
+    public static void showInputDialogFloat(@NotNull Supplier<@NotNull String> title, @NotNull Stage stage, @NotNull FloatConsumer onAccept) {
         UIUtil.showInputDialog(title, stage, (text) -> {
             try {
                 if (!text.isEmpty()) { // Make no text be like no operation
                     onAccept.accept(Float.parseFloat(text));
                 }
             } catch (NumberFormatException nfe) {
-                Dialog noticeDialog = new Dialog("Error", Styles.getInstance().windowStyleTranslucent);
-                Button cancelNoticeButton = new RunnableTextraButton("Ok", Styles.getInstance().cancelButtonStyle, (Runnable) noticeDialog::hide);
-                noticeDialog.getContentTable().add(new Label("Not a valid number: '" + text + "'", Styles.getInstance().labelStyleGeneric)).pad(10);
-                noticeDialog.getButtonTable().add(cancelNoticeButton).pad(5);
+                LAFAquaDialog noticeDialog = new LAFAquaDialog("legacylaf.uiutil.error");
+                noticeDialog.getContentTable().add(new DynamicTextraLabel(S2DI18N.s2d("legacylaf.uiutil.nan").withContext(InvalidNumberPlaceholderContext.REGISTRY_KEY, new InvalidNumberPlaceholderContext(text)))).grow();
                 noticeDialog.show(stage);
             }
         });
     }
 
-    public static void showInputDialogUnsignedInt(@NotNull String title, @NotNull Stage stage, @NotNull IntConsumer onAccept) {
+    public static void showInputDialogUnsignedInt(@NotNull Supplier<@NotNull String> title, @NotNull Stage stage, @NotNull IntConsumer onAccept) {
         UIUtil.showInputDialog(title, stage, (text) -> {
             try {
                 if (!text.isEmpty()) { // Make no text behave like a no-op
                     onAccept.accept(Integer.parseUnsignedInt(text));
                 }
             } catch (NumberFormatException nfe) {
-                Dialog noticeDialog = new Dialog("Error", Styles.getInstance().windowStyleTranslucent);
-                Button cancelNoticeButton = new RunnableTextraButton("Ok", Styles.getInstance().cancelButtonStyle, (Runnable) noticeDialog::hide);
-                noticeDialog.getContentTable().add(new Label("Not a valid number: '" + text + "'", Styles.getInstance().labelStyleGeneric)).pad(10);
-                noticeDialog.getButtonTable().add(cancelNoticeButton).pad(5);
+                LAFAquaDialog noticeDialog = new LAFAquaDialog("legacylaf.uiutil.error");
+                noticeDialog.getContentTable().add(new DynamicTextraLabel(S2DI18N.s2d("legacylaf.uiutil.nan").withContext(InvalidNumberPlaceholderContext.REGISTRY_KEY, new InvalidNumberPlaceholderContext(text)))).grow();
                 noticeDialog.show(stage);
             }
         });

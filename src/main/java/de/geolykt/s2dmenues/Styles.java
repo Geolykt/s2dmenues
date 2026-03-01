@@ -6,15 +6,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.SplitPane.SplitPaneStyle;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Disposable;
 import com.github.tommyettinger.textra.Styles.ListStyle;
 import com.github.tommyettinger.textra.Styles.TextButtonStyle;
+import com.github.tommyettinger.textra.Styles.TextFieldStyle;
 
 import de.geolykt.s2dmenues.components.drawables.FullViewportDrawable;
 import de.geolykt.s2dmenues.components.drawables.LAFAquaBackgroundDrawable;
@@ -47,8 +46,6 @@ public class Styles implements Disposable {
     @NotNull
     public final TextButtonStyle confirmButtonStyle;
     @NotNull
-    public final LabelStyle labelStyleGeneric;
-    @NotNull
     public final ScrollPaneStyle scrollPaneStyle;
     @NotNull
     public final SplitPaneStyle splitPaneStyle;
@@ -58,10 +55,6 @@ public class Styles implements Disposable {
     public final com.github.tommyettinger.textra.Styles.WindowStyle windowStyleAquaTextra;
     @NotNull
     public final WindowStyle windowStyleMainMenu;
-    @NotNull
-    public final WindowStyle windowStylePlastic;
-    @NotNull
-    public final WindowStyle windowStyleTranslucent;
 
     private Styles() {
         this.aquaEphemeralButtonStyle = new TextButtonStyle();
@@ -113,16 +106,6 @@ public class Styles implements Disposable {
         this.confirmButtonStyle.disabled = TextureCache.getInstance().getGradientWindowTenpatch(true, new Color(0x7C489AFF), 0.5F);
         this.confirmButtonStyle.disabled.setMinWidth(300F);
 
-        this.windowStyleTranslucent = new WindowStyle();
-        this.windowStyleTranslucent.titleFont = Drawing.getSpaceFont();
-        this.windowStyleTranslucent.titleFontColor = Color.WHITE;
-        this.windowStyleTranslucent.background = TextureCache.getInstance().getGradientWindowTenpatch(true, new Color(0xFF00007F), 0.5F);
-
-        this.windowStylePlastic = new WindowStyle();
-        this.windowStylePlastic.titleFont = Drawing.getSpaceFont();
-        this.windowStylePlastic.titleFontColor = Color.WHITE;
-        this.windowStylePlastic.background = TextureCache.getInstance().getGradientWindowTenpatch(true, new Color(0x7F7F7FFF), 0.5F);
-
         this.windowStyleAquaTextra = new com.github.tommyettinger.textra.Styles.WindowStyle();
         this.windowStyleAquaTextra.titleFont = FontConfig.getInstance().getPreferredFont();
         this.windowStyleAquaTextra.background = new LAFAquaBackgroundDrawable();
@@ -130,10 +113,7 @@ public class Styles implements Disposable {
         {
             TextureRegionDrawable tmp = new TextureRegionDrawable(Drawing.getTextureProvider().getSinglePixelSquare());
             // Warning: TextureRegionDrawable.tint() does not return itself - that is the method call is 'pure'.
-            FullViewportDrawable fullViewportDrawable = new FullViewportDrawable(Objects.requireNonNull(tmp.tint(new Color(0x80808080))));
-            this.windowStyleTranslucent.stageBackground = fullViewportDrawable;
-            this.windowStylePlastic.stageBackground = fullViewportDrawable;
-            this.windowStyleAquaTextra.stageBackground = fullViewportDrawable;
+            this.windowStyleAquaTextra.stageBackground = new FullViewportDrawable(Objects.requireNonNull(tmp.tint(new Color(0x80808080))));
         }
 
         this.splitPaneStyle = new SplitPaneStyle();
@@ -143,17 +123,15 @@ public class Styles implements Disposable {
         this.scrollPaneStyle = new ScrollPaneStyle();
         this.scrollPaneStyle.vScrollKnob = new TextureRegionDrawable(Drawing.getTextureProvider().getSinglePixelSquare()).tint(Color.LIGHT_GRAY);
         this.scrollPaneStyle.vScrollKnob.setMinHeight(8);
-        this.scrollPaneStyle.vScrollKnob.setMinWidth(4);
+        this.scrollPaneStyle.vScrollKnob.setMinWidth(8);
 
         this.textFieldStyle = new TextFieldStyle();
-        this.textFieldStyle.font = Drawing.getSpaceFont();
+        this.textFieldStyle.font = FontConfig.getInstance().getPreferredFont();
         this.textFieldStyle.fontColor = Color.WHITE;
         this.textFieldStyle.background = TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(Color.LIGHT_GRAY), 0.66F);
         this.textFieldStyle.background.setLeftWidth(10F);
         this.textFieldStyle.cursor = new TextureRegionDrawable(Drawing.getTextureProvider().getSinglePixelSquare()).tint(Color.BLACK);
         this.textFieldStyle.cursor.setMinWidth(3F);
-
-        this.labelStyleGeneric = new LabelStyle(Drawing.getSpaceFont(), Color.WHITE);
 
         this.windowStyleMainMenu = new WindowStyle();
         this.windowStyleMainMenu.titleFont = Drawing.getSpaceFont();
