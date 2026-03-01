@@ -8,6 +8,7 @@
     "s2dmenues:dialog.options.title": "Configuration",
     "s2dmenues:dialog.options.keys.font": "Font",
     "s2dmenues:dialog.options.keys.language": "Language",
+    "s2dmenues:dialog.options.keys.revised_generator_selection": "Revised galaxy type selection behaviour",
     "s2dmenues:dialog.galgen.title": "Generate galaxy",
     "s2dmenues:dialog.galgen.button.confirm": "Start game",
     "s2dmenues:dialog.galgen.button.size": "Star count [GRAY](%s2dmenues:dialogs.generate_galaxy.size%)[]",

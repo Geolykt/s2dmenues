@@ -1,31 +1,38 @@
 package de.geolykt.s2dmenues;
 
+import java.util.Iterator;
 import java.util.Objects;
+import java.util.TreeMap;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.IntConsumer;
 import java.util.function.Supplier;
 
 import org.jetbrains.annotations.NotNull;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
+import com.badlogic.gdx.utils.Align;
+import com.github.tommyettinger.textra.Styles.TextButtonStyle;
 import com.github.tommyettinger.textra.TextraButton;
 
+import de.geolykt.s2dmenues.bridge.I18NCapable;
+import de.geolykt.s2dmenues.components.drawables.LAFAquaBoxDrawable;
+import de.geolykt.s2dmenues.components.drawables.LAFAquaEphemeralButtonDrawable;
+import de.geolykt.s2dmenues.components.event.ActorLifecycle;
 import de.geolykt.s2dmenues.components.msdf.RunnableTextraButton;
 import de.geolykt.starloader.api.utils.FloatConsumer;
 
 public class UIUtil {
-    @NotNull
-    public static TextraButton createTextInputButton(@NotNull Supplier<@NotNull String> description, @NotNull Supplier<@NotNull String> currentValueSupplier, @NotNull Consumer<@NotNull String> currentValueSetter) {
-        return new RunnableTextraButton(description, Styles.getInstance().buttonStyle, (textButton) -> {
-            UIUtil.showInputDialog(description.get(), Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), currentValueSetter, currentValueSupplier.get());
-        });
-    }
-
     @NotNull
     public static TextraButton createFloatInputButton(@NotNull Supplier<@NotNull String> description, @NotNull FloatConsumer currentValueSetter) {
         return new RunnableTextraButton(description, Styles.getInstance().buttonStyle, (textButton) -> {
@@ -34,10 +41,21 @@ public class UIUtil {
     }
 
     @NotNull
+    public static TextraButton createTextInputButton(@NotNull Supplier<@NotNull String> description, @NotNull Supplier<@NotNull String> currentValueSupplier, @NotNull Consumer<@NotNull String> currentValueSetter) {
+        return new RunnableTextraButton(description, Styles.getInstance().buttonStyle, (textButton) -> {
+            UIUtil.showInputDialog(description.get(), Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), currentValueSetter, currentValueSupplier.get());
+        });
+    }
+
+    @NotNull
     public static TextraButton createUnsignedIntInputButton(@NotNull Supplier<@NotNull String> description, @NotNull IntConsumer currentValueSetter) {
         return new RunnableTextraButton(description, Styles.getInstance().buttonStyle, (textButton) -> {
             UIUtil.showInputDialogUnsignedInt(description.get(), Objects.requireNonNull(textButton.getStage(), "button not part of any stage"), currentValueSetter);
         });
+    }
+
+    public static void showInputDialog(@NotNull String title, @NotNull Stage stage, @NotNull Consumer<@NotNull String> onAccept) {
+        UIUtil.showInputDialog(title, stage, onAccept, "");
     }
 
     public static void showInputDialog(@NotNull String title, @NotNull Stage stage, @NotNull Consumer<@NotNull String> onAccept, @NotNull String defaultInputValue) {
@@ -58,8 +76,20 @@ public class UIUtil {
         stage.setKeyboardFocus(inputField);
     }
 
-    public static void showInputDialog(@NotNull String title, @NotNull Stage stage, @NotNull Consumer<@NotNull String> onAccept) {
-        UIUtil.showInputDialog(title, stage, onAccept, "");
+    public static void showInputDialogFloat(@NotNull String title, @NotNull Stage stage, @NotNull FloatConsumer onAccept) {
+        UIUtil.showInputDialog(title, stage, (text) -> {
+            try {
+                if (!text.isEmpty()) { // Make no text be like no operation
+                    onAccept.accept(Float.parseFloat(text));
+                }
+            } catch (NumberFormatException nfe) {
+                Dialog noticeDialog = new Dialog("Error", Styles.getInstance().windowStyleTranslucent);
+                Button cancelNoticeButton = new RunnableTextraButton("Ok", Styles.getInstance().cancelButtonStyle, (Runnable) noticeDialog::hide);
+                noticeDialog.getContentTable().add(new Label("Not a valid number: '" + text + "'", Styles.getInstance().labelStyleGeneric)).pad(10);
+                noticeDialog.getButtonTable().add(cancelNoticeButton).pad(5);
+                noticeDialog.show(stage);
+            }
+        });
     }
 
     public static void showInputDialogUnsignedInt(@NotNull String title, @NotNull Stage stage, @NotNull IntConsumer onAccept) {
@@ -78,20 +108,60 @@ public class UIUtil {
         });
     }
 
-    public static void showInputDialogFloat(@NotNull String title, @NotNull Stage stage, @NotNull FloatConsumer onAccept) {
-        UIUtil.showInputDialog(title, stage, (text) -> {
-            try {
-                if (!text.isEmpty()) { // Make no text be like no operation
-                    onAccept.accept(Float.parseFloat(text));
-                }
-            } catch (NumberFormatException nfe) {
-                Dialog noticeDialog = new Dialog("Error", Styles.getInstance().windowStyleTranslucent);
-                Button cancelNoticeButton = new RunnableTextraButton("Ok", Styles.getInstance().cancelButtonStyle, (Runnable) noticeDialog::hide);
-                noticeDialog.getContentTable().add(new Label("Not a valid number: '" + text + "'", Styles.getInstance().labelStyleGeneric)).pad(10);
-                noticeDialog.getButtonTable().add(cancelNoticeButton).pad(5);
-                noticeDialog.show(stage);
-            }
-        });
+    public static <@NotNull T extends I18NCapable> void showSelectionWindow(@NotNull InputEvent event, @NotNull Iterable<T> elements, @NotNull BiConsumer<T, @NotNull InputEvent> onClick, int preferredHAlign) {
+        UIUtil.showSelectionWindow(event, elements, I18NCapable::s2dmenues$getLocalisation, onClick, preferredHAlign);
+    }
+
+    public static <@NotNull T> void showSelectionWindow(@NotNull InputEvent triggeringEvent, @NotNull Iterable<T> elements, @NotNull Function<T, @NotNull Supplier<@NotNull String>> textifier, @NotNull BiConsumer<T, @NotNull InputEvent> onClick, int preferredHAlign) {
+        Objects.requireNonNull(onClick, "'onClick' may not be null"); // preemptive null check
+
+        TreeMap<String, T> placementOrder = new TreeMap<>();
+
+        for (T element : elements) {
+            placementOrder.put(textifier.apply(element).get(), element);
+        }
+
+        Table table = new Table();
+
+        table.setBackground(new LAFAquaBoxDrawable(8F, Color.CLEAR.toFloatBits()));
+
+        for (Iterator<T> it = placementOrder.values().iterator(); it.hasNext();) {
+            T orderedElement = it.next();
+            byte enabledVertices = it.hasNext() ? LAFAquaEphemeralButtonDrawable.DRAW_EDGE_SOUTH : 0;
+
+            TextButtonStyle aquaEphemeralButtonStyle = new TextButtonStyle();
+            aquaEphemeralButtonStyle.font = FontConfig.getInstance().getPreferredFont();
+            aquaEphemeralButtonStyle.up = new LAFAquaEphemeralButtonDrawable(4F, enabledVertices);
+            aquaEphemeralButtonStyle.over = new LAFAquaEphemeralButtonDrawable(4F, Color.toFloatBits(0.0F / 256.0F, 100.0F / 256.0F, 100.0F / 256.0F, 0.8F), enabledVertices);
+            aquaEphemeralButtonStyle.down = new LAFAquaEphemeralButtonDrawable(4F, Color.toFloatBits(1F, 207.0F / 256.0F, 1F, 1F), enabledVertices);
+            aquaEphemeralButtonStyle.disabled = new LAFAquaEphemeralButtonDrawable(4F, enabledVertices);
+
+            TextraButton button = new RunnableTextraButton(textifier.apply(orderedElement), aquaEphemeralButtonStyle, (clickedButton, clickedEvent) -> {
+                onClick.accept(orderedElement, clickedEvent);
+            });
+
+            table.add(button).prefWidth(button.getWidth()).row();
+        }
+
+        table.pack();
+        float positionY = Math.min(triggeringEvent.getStageY(), triggeringEvent.getStage().getHeight() - table.getHeight());
+        float positionX;
+
+        if (Align.isLeft(preferredHAlign)) {
+            positionX = Math.max(triggeringEvent.getStageX() - table.getWidth(), 0);
+        } else if (Align.isRight(preferredHAlign)) {
+            positionX = Math.min(triggeringEvent.getStageX(), triggeringEvent.getStage().getWidth() - table.getWidth());
+        } else {
+            positionX = Math.max(Math.min(triggeringEvent.getStageX() - table.getWidth() / 2, triggeringEvent.getStage().getWidth() - table.getWidth()), 0);
+        }
+
+        ScrollPane dialogPane = new ScrollPane(table, Styles.getInstance().scrollPaneStyle);
+
+        dialogPane.setWidth(table.getWidth());
+        dialogPane.setHeight(positionY < 0 ? triggeringEvent.getStage().getHeight() : table.getHeight());
+        dialogPane.setPosition(positionX, Math.max(0, positionY));
+
+        new ActorLifecycle(Objects.requireNonNull(triggeringEvent.getStage(), "'InputEvent#getStage' may not return null"), dialogPane).disposeOnUnfocus();
     }
 
     private UIUtil() {

@@ -5,9 +5,9 @@ import org.jetbrains.annotations.NotNull;
 
 import com.badlogic.gdx.utils.Align;
 
-import de.geolykt.s2dmenues.RunnableClickListener;
 import de.geolykt.s2dmenues.S2DI18N;
 import de.geolykt.s2dmenues.Styles;
+import de.geolykt.s2dmenues.components.event.RunnableClickListener;
 import de.geolykt.s2dmenues.components.msdf.RunnableTextraButton;
 import de.geolykt.s2dmenues.components.msdf.S2DDialog;
 

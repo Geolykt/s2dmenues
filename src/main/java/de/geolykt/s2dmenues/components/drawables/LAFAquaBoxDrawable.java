@@ -1,5 +1,8 @@
 package de.geolykt.s2dmenues.components.drawables;
 
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -8,14 +11,13 @@ import com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable;
 import de.geolykt.starloader.api.gui.Drawing;
 
 public class LAFAquaBoxDrawable extends BaseDrawable {
-
+    private static final float BRIGHT = Color.toFloatBits(0.2F, 0.2F, 0.2F, 1.0F);
+    private static final float DARK = Color.toFloatBits(0.1F, 0.1F, 0.1F, 1.0F);
     private static final float FRAME_WIDTH_HALF = 4;
+    private static final float MEDIUM = Color.toFloatBits(0.15F, 0.15F, 0.15F, 1.0F);
+    private static final float TRANSPARENT = Color.toFloatBits(0F, 0F, 0F, 0F);
 
-    private final float transparent = Color.toFloatBits(0F, 0F, 0F, 0F);
     private final float fillColor;
-    private final float bright = Color.toFloatBits(0.2F, 0.2F, 0.2F, 1.0F);
-    private final float medium = Color.toFloatBits(0.15F, 0.15F, 0.15F, 1.0F);
-    private final float dark = Color.toFloatBits(0.1F, 0.1F, 0.1F, 1.0F);
 
     public LAFAquaBoxDrawable() {
         this(16.0F);
@@ -35,7 +37,7 @@ public class LAFAquaBoxDrawable extends BaseDrawable {
     public void draw(Batch batch, float x, float y, float width, float height) {
         TextureRegion fillPixel = Drawing.getTextureProvider().getSinglePixelSquare();
 
-        // Inner coordinates (i1 = Inner corner bottom left. Numbering is counterclockwise)
+        // Inner coordinates (i1 = Inner corner bottom left. Numbering is clockwise)
         final float i1x = x + this.getLeftWidth();
         final float i1y = y + this.getBottomHeight();
         final float i2x = i1x;
@@ -60,11 +62,7 @@ public class LAFAquaBoxDrawable extends BaseDrawable {
         final float v1 = fillPixel.getV();
         final float v2 = fillPixel.getV2();
 
-        final float transparent = this.transparent;
         final float aqua = this.fillColor;
-        final float bright = this.bright;
-        final float medium = this.medium;
-        final float dark = this.dark;
 
         // Frame center ("middle") coordinates (inner coordinates are i1x/i1y to i4x/i4y)
         final float fm1x = i1x - LAFAquaBoxDrawable.FRAME_WIDTH_HALF;
@@ -88,70 +86,77 @@ public class LAFAquaBoxDrawable extends BaseDrawable {
 
         batch.draw(fillPixel.getTexture(), new float[] {
             // Left edge
-            o1x, o1y, transparent, u1, v1,
-            o2x, i2y, transparent, u1, v2,
+            o1x, o1y, LAFAquaBoxDrawable.TRANSPARENT, u1, v1,
+            o2x, i2y, LAFAquaBoxDrawable.TRANSPARENT, u1, v2,
             i2x, i2y, aqua, u2, v2,
             i1x, i1y, aqua, u2, v1,
             // Upper edge
             i2x, i2y, aqua, u1, v1,
-            o2x, o2y, transparent, u1, v2,
-            o3x, o3y, transparent, u2, v2,
+            o2x, o2y, LAFAquaBoxDrawable.TRANSPARENT, u1, v2,
+            o3x, o3y, LAFAquaBoxDrawable.TRANSPARENT, u2, v2,
             i3x, i3y, aqua, u2, v1,
             // Right edge
             i4x, i4y, aqua, u1, v1,
             i3x, i3y, aqua, u1, v2,
-            o3x, o3y, transparent, u2, v2,
-            o4x, o4y, transparent, u2, v1,
+            o3x, o3y, LAFAquaBoxDrawable.TRANSPARENT, u2, v2,
+            o4x, o4y, LAFAquaBoxDrawable.TRANSPARENT, u2, v1,
             // Bottom edge
-            o1x, o1y, transparent, u1, v1,
+            o1x, o1y, LAFAquaBoxDrawable.TRANSPARENT, u1, v1,
             i1x, i1y, aqua, u1, v2,
             i4x, i4y, aqua, u2, v2,
-            o4x, o4y, transparent, u2, v1,
+            o4x, o4y, LAFAquaBoxDrawable.TRANSPARENT, u2, v1,
             // Content body
             i1x, i1y, aqua, u1, v1,
             i2x, i2y, aqua, u1, v2,
             i3x, i3y, aqua, u2, v2,
             i4x, i4y, aqua, u2, v1,
             // Frame (inner part, left)
-            fm1x, fm1y, medium, u1, v1,
-            fm2x, fm2y, medium, u1, v2,
-            i2x, i2y, medium, u2, v2,
-            i1x, i1y, medium, u2, v1,
+            fm1x, fm1y, LAFAquaBoxDrawable.MEDIUM, u1, v1,
+            fm2x, fm2y, LAFAquaBoxDrawable.MEDIUM, u1, v2,
+            i2x, i2y, LAFAquaBoxDrawable.MEDIUM, u2, v2,
+            i1x, i1y, LAFAquaBoxDrawable.MEDIUM, u2, v1,
             // Frame inner top
-            i2x, i2y, dark, u1, v1,
-            fm2x, fm2y, dark, u1, v2,
-            fm3x, fm3y, dark, u2, v2,
-            i3x, i3y, dark, u2, v1,
+            i2x, i2y, LAFAquaBoxDrawable.DARK, u1, v1,
+            fm2x, fm2y, LAFAquaBoxDrawable.DARK, u1, v2,
+            fm3x, fm3y, LAFAquaBoxDrawable.DARK, u2, v2,
+            i3x, i3y, LAFAquaBoxDrawable.DARK, u2, v1,
             // Frame inner right
-            i4x, i4y, bright, u1, v1,
-            i3x, i3y, bright, u1, v2,
-            fm3x, fm3y, bright, u2, v2,
-            fm4x, fm4y, bright, u2, v1,
+            i4x, i4y, LAFAquaBoxDrawable.BRIGHT, u1, v1,
+            i3x, i3y, LAFAquaBoxDrawable.BRIGHT, u1, v2,
+            fm3x, fm3y, LAFAquaBoxDrawable.BRIGHT, u2, v2,
+            fm4x, fm4y, LAFAquaBoxDrawable.BRIGHT, u2, v1,
             // Frame inner bottom
-            fm1x, fm1y, bright, u1, v1,
-            i1x, i1y, bright, u1, v2,
-            i4x, i4y, bright, u2, v2,
-            fm4x, fm4y, bright, u2, v1,
+            fm1x, fm1y, LAFAquaBoxDrawable.BRIGHT, u1, v1,
+            i1x, i1y, LAFAquaBoxDrawable.BRIGHT, u1, v2,
+            i4x, i4y, LAFAquaBoxDrawable.BRIGHT, u2, v2,
+            fm4x, fm4y, LAFAquaBoxDrawable.BRIGHT, u2, v1,
             // Frame (outer part, left)
-            fo1x, fo1y, bright, u1, v1,
-            fo2x, fo2y, bright, u1, v2,
-            fm2x, fm2y, bright, u2, v2,
-            fm1x, fm1y, bright, u2, v1,
+            fo1x, fo1y, LAFAquaBoxDrawable.BRIGHT, u1, v1,
+            fo2x, fo2y, LAFAquaBoxDrawable.BRIGHT, u1, v2,
+            fm2x, fm2y, LAFAquaBoxDrawable.BRIGHT, u2, v2,
+            fm1x, fm1y, LAFAquaBoxDrawable.BRIGHT, u2, v1,
             // Frame outer top
-            fm2x, fm2y, bright, u1, v1,
-            fo2x, fo2y, bright, u1, v2,
-            fo3x, fo3y, bright, u2, v2,
-            fm3x, fm3y, bright, u2, v1,
+            fm2x, fm2y, LAFAquaBoxDrawable.BRIGHT, u1, v1,
+            fo2x, fo2y, LAFAquaBoxDrawable.BRIGHT, u1, v2,
+            fo3x, fo3y, LAFAquaBoxDrawable.BRIGHT, u2, v2,
+            fm3x, fm3y, LAFAquaBoxDrawable.BRIGHT, u2, v1,
             // Frame outer right
-            fm4x, fm4y, medium, u1, v1,
-            fm3x, fm3y, medium, u1, v2,
-            fo3x, fo3y, medium, u2, v2,
-            fo4x, fo4y, medium, u2, v1,
+            fm4x, fm4y, LAFAquaBoxDrawable.MEDIUM, u1, v1,
+            fm3x, fm3y, LAFAquaBoxDrawable.MEDIUM, u1, v2,
+            fo3x, fo3y, LAFAquaBoxDrawable.MEDIUM, u2, v2,
+            fo4x, fo4y, LAFAquaBoxDrawable.MEDIUM, u2, v1,
             // Frame outer bottom
-            fo1x, fo1y, dark, u1, v1,
-            fm1x, fm1y, dark, u1, v2,
-            fm4x, fm4y, dark, u2, v2,
-            fo4x, fo4y, dark, u2, v1
+            fo1x, fo1y, LAFAquaBoxDrawable.DARK, u1, v1,
+            fm1x, fm1y, LAFAquaBoxDrawable.DARK, u1, v2,
+            fm4x, fm4y, LAFAquaBoxDrawable.DARK, u2, v2,
+            fo4x, fo4y, LAFAquaBoxDrawable.DARK, u2, v1
         }, 0, 260);
+    }
+
+    @NotNull
+    @Contract(pure = false, mutates = "this", value = "_ -> this")
+    public LAFAquaBoxDrawable withMinWidth(float width) {
+        this.setMinHeight(width);
+        return this;
     }
 }

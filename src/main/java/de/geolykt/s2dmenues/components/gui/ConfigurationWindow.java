@@ -1,8 +1,10 @@
 package de.geolykt.s2dmenues.components.gui;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -16,17 +18,41 @@ import com.github.tommyettinger.textra.TextraSelectBox;
 
 import de.geolykt.s2dmenues.FontConfig;
 import de.geolykt.s2dmenues.S2DI18N;
+import de.geolykt.s2dmenues.S2DMenues;
 import de.geolykt.s2dmenues.FontConfig.FontPrimitive;
 import de.geolykt.s2dmenues.components.msdf.DynamicTextraLabel;
 import de.geolykt.s2dmenues.components.msdf.S2DSelectBox;
 
 public class ConfigurationWindow extends LAFAquaDialog {
 
+    @FunctionalInterface
+    public static interface BooleanConsumer {
+        void accept(boolean value);
+    }
+
     public ConfigurationWindow() {
         super("dialog.options.title");
         this.addOption("dialog.options.keys.font", FontConfig.getInstance().getPreferredFontPrimitive(), FontConfig.getInstance().getAvailableFonts(), FontConfig.getInstance()::setPreferredFont, FontPrimitive::getName);
         this.addOption("dialog.options.keys.language", S2DI18N.getActiveLocale(), S2DI18N.getAvailableLocales(), S2DI18N::setActiveLocale, Locale::getDisplayName);
+        this.addBooleanOption("dialog.options.keys.revised_generator_selection", S2DMenues.MOD_OPTION_REVISED_GALAXY_TYPE_SELECTION);
         this.getContentTable().add().bottom().growY().row();
+    }
+
+    public void addBooleanOption(@NotNull String keyName, @NotNull AtomicBoolean value) {
+        this.addBooleanOption(keyName, value.get(), (bool) -> {
+            value.set(bool);
+            S2DMenues.saveConfig();
+        });
+    }
+
+    public void addBooleanOption(@NotNull String keyName, boolean currentValue, @NotNull BooleanConsumer consumer) {
+        this.addOption(keyName, currentValue, Arrays.asList(true, false), consumer::accept, v -> {
+            if (v) {
+                return S2DI18N.s2d("boolean.generic_true").get();
+            } else {
+                return S2DI18N.s2d("boolean.generic_false").get();
+            }
+        });
     }
 
     public <@NotNull T> void addOption(@NotNull String keyName, T currentValue, @NotNull Iterable<T> options, @NotNull Consumer<T> applyOption, @NotNull Function<T, @NotNull String> stringify) {
@@ -36,7 +62,7 @@ public class ConfigurationWindow extends LAFAquaDialog {
         List<T> optionList = options instanceof List ? (List<T>) options : new ArrayList<>();
 
         for (T option : options) {
-            DynamicTextraLabel label = new DynamicTextraLabel(stringify.apply(option)) {
+            DynamicTextraLabel label = new DynamicTextraLabel(() -> stringify.apply(option)) {
                 @Override
                 public void draw(Batch batch, float parentAlpha) {
                     float prefWidth = selectBox.getList().getWidth();

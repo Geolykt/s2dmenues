@@ -13,6 +13,7 @@ import com.github.tommyettinger.textra.Styles.WindowStyle;
 import com.github.tommyettinger.textra.TextraDialog;
 
 import de.geolykt.s2dmenues.FontConfig;
+import de.geolykt.s2dmenues.components.event.ModalDialogZIndexChangedEvent;
 
 public abstract class S2DDialog extends TextraDialog {
     public S2DDialog(@NotNull String title, @NotNull WindowStyle windowStyle) {
@@ -34,5 +35,19 @@ public abstract class S2DDialog extends TextraDialog {
     @NotNull
     protected DynamicTextraLabel newLabel(String text, LabelStyle style) {
         return new DynamicTextraLabel(Objects.requireNonNull(text, "'text' may not be null"), Objects.requireNonNull(style, "'style' may not be null"));
+    }
+
+    @Override
+    public boolean setZIndex(int index) {
+        if (super.setZIndex(index)) {
+            ModalDialogZIndexChangedEvent event = new ModalDialogZIndexChangedEvent();
+            event.setZIndex(index);
+
+            this.fire(event);
+
+            return true;
+        }
+
+        return false;
     }
 }

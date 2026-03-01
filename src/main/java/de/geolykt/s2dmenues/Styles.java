@@ -13,10 +13,13 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Disposable;
+import com.github.tommyettinger.textra.Styles.ListStyle;
 import com.github.tommyettinger.textra.Styles.TextButtonStyle;
 
 import de.geolykt.s2dmenues.components.drawables.FullViewportDrawable;
 import de.geolykt.s2dmenues.components.drawables.LAFAquaBackgroundDrawable;
+import de.geolykt.s2dmenues.components.drawables.LAFAquaBoxDrawable;
+import de.geolykt.s2dmenues.components.msdf.S2DSelectBox.BasicSelectionDrawable;
 import de.geolykt.starloader.api.gui.Drawing;
 
 public class Styles implements Disposable {
@@ -34,6 +37,10 @@ public class Styles implements Disposable {
     }
 
     @NotNull
+    public final TextButtonStyle aquaEphemeralButtonStyle;
+    @NotNull
+    public final ListStyle aquaListStyle;
+    @NotNull
     public final TextButtonStyle buttonStyle;
     @NotNull
     public final TextButtonStyle cancelButtonStyle;
@@ -48,16 +55,29 @@ public class Styles implements Disposable {
     @NotNull
     public final TextFieldStyle textFieldStyle;
     @NotNull
+    public final com.github.tommyettinger.textra.Styles.WindowStyle windowStyleAquaTextra;
+    @NotNull
     public final WindowStyle windowStyleMainMenu;
     @NotNull
     public final WindowStyle windowStylePlastic;
     @NotNull
     public final WindowStyle windowStyleTranslucent;
 
-    @NotNull
-    public final com.github.tommyettinger.textra.Styles.WindowStyle windowStyleAquaTextra;
-
     private Styles() {
+        this.aquaEphemeralButtonStyle = new TextButtonStyle();
+        this.aquaEphemeralButtonStyle.font = FontConfig.getInstance().getPreferredFont();
+        this.aquaEphemeralButtonStyle.up = new LAFAquaBoxDrawable(4F);
+        this.aquaEphemeralButtonStyle.over = new LAFAquaBoxDrawable(4F);
+        this.aquaEphemeralButtonStyle.down = new LAFAquaBoxDrawable(4F);
+        this.aquaEphemeralButtonStyle.disabled = new LAFAquaBoxDrawable(4F);
+
+        this.aquaListStyle = new ListStyle();
+        this.aquaListStyle.fontColorSelected = Color.GRAY;
+        this.aquaListStyle.fontColorUnselected = Color.WHITE;
+        this.aquaListStyle.selection = new BasicSelectionDrawable();
+        // 157, 68, 47
+        this.aquaListStyle.background = new LAFAquaBoxDrawable(16F, Color.toFloatBits(90, 45, 33/*157, 68, 47*/, 255));
+
         this.buttonStyle = new TextButtonStyle();
         this.buttonStyle.font = FontConfig.getInstance().getPreferredFont();
         this.buttonStyle.up = TextureCache.getInstance().getGradientWindowTenpatch(false, new Color(0xFE5B3EFF), 0.66F);

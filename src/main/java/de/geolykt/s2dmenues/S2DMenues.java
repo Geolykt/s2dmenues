@@ -5,6 +5,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,6 +36,9 @@ public class S2DMenues extends Extension {
     @NotNull
     public static final Path MOD_DATA_DIR = Starloader.getInstance().getModDirectory().resolve(S2DMenues.MOD_ID);
 
+    @NotNull
+    public static final AtomicBoolean MOD_OPTION_REVISED_GALAXY_TYPE_SELECTION = new AtomicBoolean(true);
+
     @Nullable
     private static JSONObject loadedConfig;
 
@@ -64,6 +68,8 @@ public class S2DMenues extends Extension {
         if (i18nJson == null) {
             i18nJson = new JSONObject();
         }
+
+        S2DMenues.MOD_OPTION_REVISED_GALAXY_TYPE_SELECTION.set(loadedConfig.optBoolean("revised-galaxy-type-selection", S2DMenues.MOD_OPTION_REVISED_GALAXY_TYPE_SELECTION.get()));
 
         S2DMenues.loadedConfig = loadedConfig;
         FontConfig.start(S2DMenues.MOD_DATA_DIR, fontJson);
@@ -113,7 +119,7 @@ public class S2DMenues extends Extension {
         });
     }
 
-    public static void saveConfig() {
+    public static synchronized void saveConfig() {
         JSONObject loadedConfig = S2DMenues.loadedConfig;
 
         if (loadedConfig == null) {
@@ -122,6 +128,7 @@ public class S2DMenues extends Extension {
 
         loadedConfig.put("font", FontConfig.getInstance().saveConfig());
         loadedConfig.put("i18n", S2DI18N.saveConfig());
+        loadedConfig.put("revised-galaxy-type-selection", S2DMenues.MOD_OPTION_REVISED_GALAXY_TYPE_SELECTION.get());
 
         try {
             Files.write(S2DMenues.MOD_DATA_DIR.resolve("config.json"), loadedConfig.toString(2).getBytes(StandardCharsets.UTF_8));

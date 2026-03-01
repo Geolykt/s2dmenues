@@ -30,7 +30,7 @@ public class LAFAquaBackgroundDrawable extends BaseDrawable {
     public void draw(Batch batch, float x, float y, float width, float height) {
         TextureRegion fillPixel = Drawing.getTextureProvider().getSinglePixelSquare();
 
-        // Inner coordinates (i1 = Inner corner bottom left. Numbering is counterclockwise)
+        // Inner coordinates (i1 = Inner corner bottom left. Numbering is clockwise)
         final float i1x = x + this.getLeftWidth();
         final float i1y = y + this.getBottomHeight();
         final float i2x = i1x;

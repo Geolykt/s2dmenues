@@ -3,6 +3,8 @@ package de.geolykt.s2dmenues.components.gui;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -30,12 +32,14 @@ import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.SplitPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Disposable;
 import com.github.tommyettinger.textra.TextraButton;
 
 import de.geolykt.s2dmenues.S2DI18N;
 import de.geolykt.s2dmenues.S2DI18N.ConfiguredTranslateable;
 import de.geolykt.s2dmenues.S2DI18N.PlaceholderContext;
+import de.geolykt.s2dmenues.S2DMenues;
 import de.geolykt.s2dmenues.Styles;
 import de.geolykt.s2dmenues.UIUtil;
 import de.geolykt.s2dmenues.bridge.I18NCapable;
@@ -45,6 +49,7 @@ import de.geolykt.s2dmenues.bridge.VelocityMovingStarGenerator;
 import de.geolykt.s2dmenues.components.NOPActor;
 import de.geolykt.s2dmenues.components.msdf.RunnableTextraButton;
 import de.geolykt.s2dmenues.incubator.StarPlacementGenerator;
+import de.geolykt.s2dmenues.incubator.StarPlacementGeneratorCategory;
 import de.geolykt.s2dmenues.incubator.StarPlacementRegistry;
 import de.geolykt.starloader.api.NamespacedKey;
 import de.geolykt.starloader.api.empire.StarlaneGenerator;
@@ -111,12 +116,6 @@ public class GenGalaxyWindow extends LAFAquaDialog implements Disposable, Placeh
     @NotNull
     private final TextraButton starlaneGeneratorButton;
 
-    @NotNull
-    @Contract(pure = true)
-    protected ConfiguredTranslateable translate(@NotNull String key) {
-        return S2DI18N.s2d(key).withContext(GenGalaxyWindow.PLACEHOLDER_KEY, this);
-    }
-
     public GenGalaxyWindow() {
         super("dialog.galgen.title");
 
@@ -132,69 +131,16 @@ public class GenGalaxyWindow extends LAFAquaDialog implements Disposable, Placeh
         });
 
         this.galaxySizeButton = UIUtil.createUnsignedIntInputButton(this.translate("dialog.galgen.button.size"), this::setGalaxySize);
-        this.galaxyTypeButton = new RunnableTextraButton(this.translate("dialog.galgen.button.type"), Styles.getInstance().buttonStyle, (openGalaxyTypeSelectionButton) -> {
-            this.enableCurrentDialogButton();
-            openGalaxyTypeSelectionButton.setDisabled(true);
-            this.dialog = SubDialog.GALAXY_TYPE;
-            // Display modal
-            Collection<StarPlacementGenerator> generators = StarPlacementRegistry.GENERATOR_REGISTRY.valuesView();
-            Table optionsTable = new Table();
-            ScrollPane optionsScrolling = new ScrollPane(optionsTable, Styles.getInstance().scrollPaneStyle);
-            NavigableMap<Map.Entry<String, @NotNull ConfiguredTranslateable>, Set<TextraButton>> mapButtons = new TreeMap<>((e1, e2) -> {
-                return e1.getKey().compareTo(e2.getKey());
-            });
 
-            if (this.currentGenerator == null) {
-                this.currentGenerator = StarPlacementRegistry.GENERATOR_REGISTRY.require(NamespacedKey.fromString("galimulator", "PLACEMENT_GENERATOR_STRETCHED_SPIRAL"));
-            }
+        this.galaxyTypeButton = new RunnableTextraButton(this.translate("dialog.galgen.button.type"), Styles.getInstance().buttonStyle, (openGalaxyTypeSelectionButton, event) -> {
+            if (S2DMenues.MOD_OPTION_REVISED_GALAXY_TYPE_SELECTION.get()) {
+                this.onRevisedGeneratorSelection(event);
+            } else {
+                this.enableCurrentDialogButton();
+                openGalaxyTypeSelectionButton.setDisabled(true);
+                this.dialog = SubDialog.GALAXY_TYPE;
 
-            AtomicReference<TextraButton> currentSelectedMapMode = new AtomicReference<>();
-            for (StarPlacementGenerator map : generators) {
-                TextraButton textButton = new RunnableTextraButton(map.s2dmenues$getLocalisation(), Styles.getInstance().buttonStyle, (mapButton) -> {
-                    this.setMapData((MapData) map.toLegacyMap());
-                    currentSelectedMapMode.get().setDisabled(false);
-                    mapButton.setDisabled(true);
-                    currentSelectedMapMode.set(mapButton);
-                    this.currentGenerator = map;
-                });
-                if (map == this.currentGenerator) {
-                    currentSelectedMapMode.set(textButton);
-                    textButton.setDisabled(true);
-                    this.setMapData((MapData) map.toLegacyMap());
-                }
-                textButton.addListener((evt) -> {
-                    if (evt instanceof InputEvent && ((InputEvent) evt).getType() == InputEvent.Type.enter) {
-                        GenGalaxyWindow.this.getStage().setScrollFocus(evt.getListenerActor());
-                    }
-                    return false;
-                });
-
-                ConfiguredTranslateable categoryNameTranslation = map.getCategory().s2dmenues$getLocalisation();
-                Map.Entry<String, ConfiguredTranslateable> categoryKey = new SimpleImmutableEntry<>(categoryNameTranslation.get(), categoryNameTranslation);
-
-                mapButtons.compute(categoryKey, (ignore, values) -> {
-                    if (values == null) {
-                        values = new TreeSet<>((a1, a2) -> {
-                            return a1.getText().toString().compareToIgnoreCase(a2.getText().toString());
-                        });
-                    }
-                    values.add(textButton);
-                    return values;
-                });
-            }
-
-            for (Map.Entry<Map.Entry<String, @NotNull ConfiguredTranslateable>, Set<TextraButton>> buttons : mapButtons.entrySet()) {
-                HorizontalGroup options = new HorizontalGroup().wrap().fill();
-                buttons.getValue().forEach(options::addActor);
-
-                TextraButton categoryButton = new RunnableTextraButton(buttons.getKey().getValue(), Styles.getInstance().buttonStyle);
-                optionsTable.add(categoryButton).left().growX().row();
-                optionsTable.add(options).left().growX().row();
-            }
-
-            this.masterSplitPane.setSecondWidget(optionsScrolling);
-            if (this.masterSplitPane.getSplitAmount() > 0.5F) {
-                this.masterSplitPane.setSplitAmount(0.5F);
+                this.onLegacyGeneratorSelection();
             }
         });
 
@@ -341,6 +287,7 @@ public class GenGalaxyWindow extends LAFAquaDialog implements Disposable, Placeh
                 this.masterSplitPane.setSplitAmount(0.8F);
             }
         });
+
         this.galaxyPreview = new GalaxyPreviewWidget(this);
         this.openGeneratorOptionsButton = new RunnableTextraButton(this.translate("dialog.galgen.button.generator_options"), Styles.getInstance().buttonStyle, this::openGeneratorOptions);
 
@@ -457,6 +404,92 @@ public class GenGalaxyWindow extends LAFAquaDialog implements Disposable, Placeh
     @NotNull
     public MapData getMapdata() {
         return this.mapdata;
+    }
+
+    private void onLegacyGeneratorSelection() {
+
+        // Display modal
+        Collection<StarPlacementGenerator> generators = StarPlacementRegistry.GENERATOR_REGISTRY.valuesView();
+        Table optionsTable = new Table();
+        ScrollPane optionsScrolling = new ScrollPane(optionsTable, Styles.getInstance().scrollPaneStyle);
+        NavigableMap<Map.Entry<String, @NotNull ConfiguredTranslateable>, Set<TextraButton>> mapButtons = new TreeMap<>((e1, e2) -> {
+            return e1.getKey().compareTo(e2.getKey());
+        });
+
+        if (this.currentGenerator == null) {
+            this.currentGenerator = StarPlacementRegistry.GENERATOR_REGISTRY.require(NamespacedKey.fromString("galimulator", "PLACEMENT_GENERATOR_STRETCHED_SPIRAL"));
+        }
+
+        AtomicReference<TextraButton> currentSelectedMapMode = new AtomicReference<>();
+        for (StarPlacementGenerator map : generators) {
+            TextraButton textButton = new RunnableTextraButton(map.s2dmenues$getLocalisation(), Styles.getInstance().buttonStyle, (mapButton) -> {
+                this.currentGenerator = map;
+                this.setMapData((MapData) map.toLegacyMap());
+                currentSelectedMapMode.get().setDisabled(false);
+                mapButton.setDisabled(true);
+                currentSelectedMapMode.set(mapButton);
+            });
+            if (map == this.currentGenerator) {
+                currentSelectedMapMode.set(textButton);
+                textButton.setDisabled(true);
+                this.setMapData((MapData) map.toLegacyMap());
+            }
+            textButton.addListener((evt) -> {
+                if (evt instanceof InputEvent && ((InputEvent) evt).getType() == InputEvent.Type.enter) {
+                    GenGalaxyWindow.this.getStage().setScrollFocus(evt.getListenerActor());
+                }
+                return false;
+            });
+
+            ConfiguredTranslateable categoryNameTranslation = map.getCategory().s2dmenues$getLocalisation();
+            Map.Entry<String, ConfiguredTranslateable> categoryKey = new SimpleImmutableEntry<>(categoryNameTranslation.get(), categoryNameTranslation);
+
+            mapButtons.compute(categoryKey, (ignore, values) -> {
+                if (values == null) {
+                    values = new TreeSet<>((a1, a2) -> {
+                        return a1.getText().toString().compareToIgnoreCase(a2.getText().toString());
+                    });
+                }
+                values.add(textButton);
+                return values;
+            });
+        }
+
+        for (Map.Entry<Map.Entry<String, @NotNull ConfiguredTranslateable>, Set<TextraButton>> buttons : mapButtons.entrySet()) {
+            HorizontalGroup options = new HorizontalGroup().wrap().fill();
+            buttons.getValue().forEach(options::addActor);
+
+            TextraButton categoryButton = new RunnableTextraButton(buttons.getKey().getValue(), Styles.getInstance().buttonStyle);
+            optionsTable.add(categoryButton).left().growX().row();
+            optionsTable.add(options).left().growX().row();
+        }
+
+        this.masterSplitPane.setSecondWidget(optionsScrolling);
+        if (this.masterSplitPane.getSplitAmount() > 0.5F) {
+            this.masterSplitPane.setSplitAmount(0.5F);
+        }
+    }
+
+    private void onRevisedGeneratorSelection(@NotNull InputEvent event) {
+        Map<@NotNull StarPlacementGeneratorCategory, Set<@NotNull StarPlacementGenerator>> categories = new HashMap<>();
+
+        for (StarPlacementGenerator generator : StarPlacementRegistry.GENERATOR_REGISTRY.valuesView()) {
+            categories.compute(generator.getCategory(), (var10001, collection) -> {
+                if (collection == null) {
+                    collection = new HashSet<>();
+                }
+
+                collection.add(generator);
+                return collection;
+            });
+        }
+
+        UIUtil.showSelectionWindow(event, categories.keySet(), (category, e2) -> {
+            UIUtil.showSelectionWindow(e2, Objects.requireNonNull(categories.get(category), "no generator under category"), (generator, e3) -> {
+                this.currentGenerator = generator;
+                this.setMapData((MapData) generator.toLegacyMap());
+            }, Align.left);
+        }, Align.left);
     }
 
     private void openGeneratorOptions() {
@@ -641,5 +674,11 @@ public class GenGalaxyWindow extends LAFAquaDialog implements Disposable, Placeh
         super.show(stage);
         this.setBounds(16F, 16F, stage.getWidth() - 32F, stage.getHeight() - 32F);
         return this;
+    }
+
+    @NotNull
+    @Contract(pure = true)
+    protected ConfiguredTranslateable translate(@NotNull String key) {
+        return S2DI18N.s2d(key).withContext(GenGalaxyWindow.PLACEHOLDER_KEY, this);
     }
 }
