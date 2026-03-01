@@ -2,10 +2,13 @@ package de.geolykt.s2dmenues.incubator;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Locale;
 import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
 
+import de.geolykt.s2dmenues.S2DI18N;
+import de.geolykt.s2dmenues.S2DI18N.ConfiguredTranslateable;
 import de.geolykt.starloader.api.NamespacedKey;
 
 import snoddasmannen.galimulator.FractalStarGenerator;
@@ -51,9 +54,15 @@ public class VanillaStarGeneratorWrapper implements StarPlacementGenerator {
     @NotNull
     private final NamespacedKey key;
 
+    @NotNull
+    private final ConfiguredTranslateable localisation;
+
     public VanillaStarGeneratorWrapper(@NotNull StarGenerator generator, @NotNull NamespacedKey key) {
-        this.generator = generator;
-        this.key = key;
+        this.generator = Objects.requireNonNull(generator, "'generator' may not be null");
+        this.key = Objects.requireNonNull(key, "'key' may not be null");
+        this.localisation = S2DI18N.s2d("registries.generators." + key.toString().toLowerCase(Locale.ROOT)).withDefault(() -> {
+            return Objects.requireNonNull(this.generator.name(), "StarGenerator#name yielded null.");
+        });
     }
 
     @Override
@@ -64,26 +73,26 @@ public class VanillaStarGeneratorWrapper implements StarPlacementGenerator {
 
     @Override
     @NotNull
-    public String getDisplayCategory() {
+    public StarPlacementGeneratorCategory getCategory() {
         if (this.generator instanceof ProceduralStarGenerator) {
-            return this.generator.hasMovingStars() ? "Procedural moving" : "Procedural";
+            return this.generator.hasMovingStars() ? StarPlacementGeneratorCategory.PROCEDURAL_MOVING : StarPlacementGeneratorCategory.PROCEDURAL;
         } else if (this.generator instanceof FractalStarGenerator) {
-            return "Fractal";
+            return StarPlacementGeneratorCategory.FRACTAL;
         } else {
-            return "Uncategorised";
+            return StarPlacementGeneratorCategory.MISC;
         }
-    }
-
-    @Override
-    @NotNull
-    public String getDisplayName() {
-        return Objects.requireNonNull(this.generator.name());
     }
 
     @Override
     @NotNull
     public NamespacedKey getRegistryKey() {
         return this.key;
+    }
+
+    @Override
+    @NotNull
+    public ConfiguredTranslateable s2dmenues$getLocalisation() {
+        return this.localisation;
     }
 
     @Override

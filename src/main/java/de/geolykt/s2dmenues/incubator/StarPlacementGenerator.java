@@ -5,6 +5,7 @@ import java.util.Collection;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
+import de.geolykt.s2dmenues.bridge.I18NCapable;
 import de.geolykt.starloader.api.registry.RegistryKeyed;
 
 /**
@@ -15,7 +16,8 @@ import de.geolykt.starloader.api.registry.RegistryKeyed;
  * <p>Not intended to be implemented manually as of yet.
  */
 @ApiStatus.Experimental
-public interface StarPlacementGenerator extends RegistryKeyed {
+public interface StarPlacementGenerator extends RegistryKeyed, I18NCapable {
+
     /**
      * Generate <code>count</code> locations from stars, with the position of the stars
      * being defined by the semantics of this {@link StarPlacementGenerator} instance.
@@ -43,23 +45,16 @@ public interface StarPlacementGenerator extends RegistryKeyed {
     Collection<@NotNull StarPlacementMeta> generatePlacements(int count, float maxX, float maxY);
 
     /**
-     * Obtains the user-friendly display name of the {@link StarPlacementGenerator}, as it is
-     * being displayed on UIs.
+     * Obtains the category of this generator.
      *
-     * @return The human-friendly display name.
+     * <p>Note: Multiple invocations of this method <em>might</em> return categories
+     * that aren't identical to each other, but will be equal to each other.
+     *
+     * @return The {@link StarPlacementGeneratorCategory} of this generator.
+     * @since 0.3.0
      */
     @NotNull
-    String getDisplayName();
-
-    /**
-     * Obtains the user-friendly display name of the category of the {@link StarPlacementGenerator}, as it is
-     * being displayed on UIs. This is used to batch together similar generators, as otherwise
-     * interfaces would become too cluttered.
-     *
-     * @return The human-friendly display name of the category wherein this generator lies in.
-     */
-    @NotNull
-    String getDisplayCategory();
+    StarPlacementGeneratorCategory getCategory();
 
     @NotNull
     @Deprecated

@@ -49,6 +49,11 @@ public final class S2DI18N {
             return this;
         }
 
+        @NotNull
+        public final NamespacedKey getKey() {
+            return this.translationkey;
+        }
+
         @Override
         @NotNull
         @Contract(pure = true)

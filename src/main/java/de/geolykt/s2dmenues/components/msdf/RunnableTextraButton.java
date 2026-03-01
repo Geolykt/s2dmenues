@@ -23,28 +23,28 @@ public class RunnableTextraButton extends TextraButton {
         this(() -> text, style, action);
     }
 
-    public RunnableTextraButton(@NotNull Supplier<@NotNull String> text, @NotNull TextButtonStyle style, @NotNull Consumer<@NotNull RunnableTextraButton> action) {
+    public RunnableTextraButton(@NotNull String text, @NotNull TextButtonStyle style, @NotNull Runnable action) {
+        this(() -> text, style, action);
+    }
+
+    public RunnableTextraButton(@NotNull Supplier<@NotNull String> text, @NotNull TextButtonStyle style) {
         super(text.get(), style);
         this.getTextraLabel().wrap = true;
+        this.setWidth(300F);
+        this.setHeight(30F);
+        this.textProvider = text;
+    }
+
+    public RunnableTextraButton(@NotNull Supplier<@NotNull String> text, @NotNull TextButtonStyle style, @NotNull Consumer<@NotNull RunnableTextraButton> action) {
+        this(text, style);
         this.addListener(new RunnableClickListener(() -> {
             action.accept(this);
         }));
-        this.setWidth(300F);
-        this.setHeight(30F);
-        this.textProvider = text;
     }
 
     public RunnableTextraButton(@NotNull Supplier<@NotNull String> text, @NotNull TextButtonStyle style, @NotNull Runnable action) {
-        super(text.get(), style);
-        this.getTextraLabel().wrap = true;
+        this(text, style);
         this.addListener(new RunnableClickListener(action));
-        this.setWidth(300F);
-        this.setHeight(30F);
-        this.textProvider = text;
-    }
-
-    public RunnableTextraButton(@NotNull String text, @NotNull TextButtonStyle style, @NotNull Runnable action) {
-        this(() -> text, style, action);
     }
 
     @Override

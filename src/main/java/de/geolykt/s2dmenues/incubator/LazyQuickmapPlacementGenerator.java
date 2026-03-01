@@ -2,10 +2,13 @@ package de.geolykt.s2dmenues.incubator;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Locale;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import de.geolykt.s2dmenues.S2DI18N;
+import de.geolykt.s2dmenues.S2DI18N.ConfiguredTranslateable;
 import de.geolykt.starloader.api.NamespacedKey;
 
 import snoddasmannen.galimulator.FloatmapStarGenerator;
@@ -18,6 +21,8 @@ public class LazyQuickmapPlacementGenerator implements StarPlacementGenerator {
     @Nullable
     private FloatmapStarGenerator floatmapStarGenerator;
     @NotNull
+    private final ConfiguredTranslateable localisation;
+    @NotNull
     private final Path quickmapPath;
     @NotNull
     private final NamespacedKey registryKey;
@@ -26,6 +31,14 @@ public class LazyQuickmapPlacementGenerator implements StarPlacementGenerator {
         this.quickmapPath = quickmapPath;
         this.bitmapPath = bitmapPath;
         this.registryKey = registryKey;
+        this.localisation = S2DI18N.s2d("registries.generators." + registryKey.toString().toLowerCase(Locale.ROOT)).withDefault(() -> {
+            String filename = this.quickmapPath.getFileName().toString();
+            int dotindex = filename.lastIndexOf('.');
+            if (dotindex < 0) {
+                return filename;
+            }
+            return filename.substring(0, dotindex);
+        });
     }
 
     @Override
@@ -41,25 +54,20 @@ public class LazyQuickmapPlacementGenerator implements StarPlacementGenerator {
 
     @Override
     @NotNull
-    public String getDisplayCategory() {
-        return "Quickmaps";
-    }
-
-    @Override
-    @NotNull
-    public String getDisplayName() {
-        String filename = this.quickmapPath.getFileName().toString();
-        int dotindex = filename.lastIndexOf('.');
-        if (dotindex < 0) {
-            return filename;
-        }
-        return filename.substring(0, dotindex);
+    public StarPlacementGeneratorCategory getCategory() {
+        return StarPlacementGeneratorCategory.QUICKMAPS;
     }
 
     @Override
     @NotNull
     public NamespacedKey getRegistryKey() {
         return this.registryKey;
+    }
+
+    @Override
+    @NotNull
+    public ConfiguredTranslateable s2dmenues$getLocalisation() {
+        return this.localisation;
     }
 
     @Override

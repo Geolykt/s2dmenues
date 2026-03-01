@@ -1,5 +1,6 @@
 package de.geolykt.s2dmenues.components.gui;
 
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -139,7 +140,9 @@ public class GenGalaxyWindow extends LAFAquaDialog implements Disposable, Placeh
             Collection<StarPlacementGenerator> generators = StarPlacementRegistry.GENERATOR_REGISTRY.valuesView();
             Table optionsTable = new Table();
             ScrollPane optionsScrolling = new ScrollPane(optionsTable, Styles.getInstance().scrollPaneStyle);
-            NavigableMap<String, Set<TextraButton>> mapButtons = new TreeMap<>();
+            NavigableMap<Map.Entry<String, @NotNull ConfiguredTranslateable>, Set<TextraButton>> mapButtons = new TreeMap<>((e1, e2) -> {
+                return e1.getKey().compareTo(e2.getKey());
+            });
 
             if (this.currentGenerator == null) {
                 this.currentGenerator = StarPlacementRegistry.GENERATOR_REGISTRY.require(NamespacedKey.fromString("galimulator", "PLACEMENT_GENERATOR_STRETCHED_SPIRAL"));
@@ -147,9 +150,7 @@ public class GenGalaxyWindow extends LAFAquaDialog implements Disposable, Placeh
 
             AtomicReference<TextraButton> currentSelectedMapMode = new AtomicReference<>();
             for (StarPlacementGenerator map : generators) {
-                String mapName = map.getDisplayName();
-                String categoryName = map.getDisplayCategory();
-                TextraButton textButton = new RunnableTextraButton(Objects.requireNonNull(mapName), Styles.getInstance().buttonStyle, (mapButton) -> {
+                TextraButton textButton = new RunnableTextraButton(map.s2dmenues$getLocalisation(), Styles.getInstance().buttonStyle, (mapButton) -> {
                     this.setMapData((MapData) map.toLegacyMap());
                     currentSelectedMapMode.get().setDisabled(false);
                     mapButton.setDisabled(true);
@@ -167,7 +168,11 @@ public class GenGalaxyWindow extends LAFAquaDialog implements Disposable, Placeh
                     }
                     return false;
                 });
-                mapButtons.compute(categoryName, (ignore, values) -> {
+
+                ConfiguredTranslateable categoryNameTranslation = map.getCategory().s2dmenues$getLocalisation();
+                Map.Entry<String, ConfiguredTranslateable> categoryKey = new SimpleImmutableEntry<>(categoryNameTranslation.get(), categoryNameTranslation);
+
+                mapButtons.compute(categoryKey, (ignore, values) -> {
                     if (values == null) {
                         values = new TreeSet<>((a1, a2) -> {
                             return a1.getText().toString().compareToIgnoreCase(a2.getText().toString());
@@ -178,12 +183,11 @@ public class GenGalaxyWindow extends LAFAquaDialog implements Disposable, Placeh
                 });
             }
 
-            for (Map.Entry<String, Set<TextraButton>> buttons : mapButtons.entrySet()) {
-                String categoryName = Objects.requireNonNull(buttons.getKey());
+            for (Map.Entry<Map.Entry<String, @NotNull ConfiguredTranslateable>, Set<TextraButton>> buttons : mapButtons.entrySet()) {
                 HorizontalGroup options = new HorizontalGroup().wrap().fill();
                 buttons.getValue().forEach(options::addActor);
 
-                TextraButton categoryButton = new TextraButton(categoryName, Styles.getInstance().buttonStyle);
+                TextraButton categoryButton = new RunnableTextraButton(buttons.getKey().getValue(), Styles.getInstance().buttonStyle);
                 optionsTable.add(categoryButton).left().growX().row();
                 optionsTable.add(options).left().growX().row();
             }

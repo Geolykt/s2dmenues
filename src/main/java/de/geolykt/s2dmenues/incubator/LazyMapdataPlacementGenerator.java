@@ -2,6 +2,7 @@ package de.geolykt.s2dmenues.incubator;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Locale;
 import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
@@ -9,12 +10,16 @@ import org.jetbrains.annotations.Nullable;
 
 import com.badlogic.gdx.files.FileHandle;
 
+import de.geolykt.s2dmenues.S2DI18N;
+import de.geolykt.s2dmenues.S2DI18N.ConfiguredTranslateable;
 import de.geolykt.starloader.api.NamespacedKey;
 
 import snoddasmannen.galimulator.MapData;
 
 public class LazyMapdataPlacementGenerator implements StarPlacementGenerator {
 
+    @NotNull
+    private final ConfiguredTranslateable localisation;
     @Nullable
     private MapData mapData;
     @NotNull
@@ -28,6 +33,7 @@ public class LazyMapdataPlacementGenerator implements StarPlacementGenerator {
         this.mapPath = mapPath;
         this.mapName = mapName;
         this.registryKey = registryKey;
+        this.localisation = S2DI18N.s2d("registries.generators." + registryKey.toString().toLowerCase(Locale.ROOT)).withDefault(() -> mapName);
     }
 
     @Override
@@ -43,13 +49,12 @@ public class LazyMapdataPlacementGenerator implements StarPlacementGenerator {
 
     @Override
     @NotNull
-    public String getDisplayCategory() {
-        return "Maps on disk";
+    public StarPlacementGeneratorCategory getCategory() {
+        return StarPlacementGeneratorCategory.MAPS_ON_DISK;
     }
 
-    @Override
     @NotNull
-    public String getDisplayName() {
+    public String getMapName() {
         return this.mapName;
     }
 
@@ -57,6 +62,12 @@ public class LazyMapdataPlacementGenerator implements StarPlacementGenerator {
     @NotNull
     public NamespacedKey getRegistryKey() {
         return this.registryKey;
+    }
+
+    @Override
+    @NotNull
+    public ConfiguredTranslateable s2dmenues$getLocalisation() {
+        return this.localisation;
     }
 
     @Override
