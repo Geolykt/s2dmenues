@@ -81,6 +81,8 @@ public class MSDFScrollingTextWidget extends Widget {
         LabelStyle runStyle = new LabelStyle(this.baseRunLabelStyle);
         runStyle.font = new Font(runStyle.font);
 
+        float fontsize = 1F;
+
         while (!line.isEmpty() && line.codePointAt(0) == '\\') {
             if (line.startsWith("\\rightjustify ")) {
                 line = line.substring("\\rightjustify ".length());
@@ -94,7 +96,7 @@ public class MSDFScrollingTextWidget extends Widget {
                 line = line.substring(spaceidx + 1);
 
                 try {
-                    runStyle.font.scale(Float.parseFloat(numberString));
+                    fontsize = Float.parseFloat(numberString);
                 } catch (NumberFormatException nfe) {
                     line = "Error: Unknown number: '" + numberString + "'; " + line;
                 }
@@ -107,7 +109,34 @@ public class MSDFScrollingTextWidget extends Widget {
             line = " ";
         }
 
-        TextraLabel label = new TextraLabel(line, runStyle);
+        float fontSizeFinal = fontsize;
+
+        TextraLabel label = new TextraLabel(line, runStyle) {
+            @Override
+            public void setFont(Font font) {
+                Font cpy = new Font(font);
+                cpy.scale(fontSizeFinal);
+                super.setFont(cpy);
+            }
+
+            @Override
+            public float getPrefHeight() {
+                float prefHeight = super.getPrefHeight();
+                return prefHeight == 0 ? this.getFont().cellHeight : prefHeight;
+            }
+
+            @Override
+            public float getHeight() {
+                float height = super.getHeight();
+                return height == 0 ? this.getFont().cellHeight : height;
+            }
+
+            @Override
+            public float getMinHeight() {
+                return Math.max(super.getMinHeight(), this.getFont().cellHeight);
+            }
+        };
+
         label.setAlignment(align);
 
         return label;
