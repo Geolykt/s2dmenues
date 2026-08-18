@@ -2,6 +2,7 @@ package de.geolykt.s2dmenues;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -17,7 +18,7 @@ public class MainMenuStage extends Stage {
 
     @NotNull
     private final Drawable background;
-    private final List<Runnable> cleanupHandlers = new ArrayList<>();
+    private final List<@NotNull Runnable> cleanupHandlers = new ArrayList<>();
     private final boolean disposeBackground;
 
     public MainMenuStage(@NotNull Drawable background, boolean disposeBackground) {
@@ -28,7 +29,7 @@ public class MainMenuStage extends Stage {
     }
 
     public void addCleanupHandler(@NotNull Runnable handler) {
-        this.cleanupHandlers.add(handler);
+        this.cleanupHandlers.add(Objects.requireNonNull(handler, "'handler' may not be null"));
     }
 
     @Override

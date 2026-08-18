@@ -520,7 +520,7 @@ public class GenGalaxyWindow extends LAFAquaDialog implements Disposable, Placeh
                         button.setDisabled(false);
                     }
                     clickedButton.setDisabled(true);
-                    algo.a(fsg);
+                    algo.generateTerrain(fsg);
                     fsg.a(algo);
                     this.galaxyPreview.reset();
                 });

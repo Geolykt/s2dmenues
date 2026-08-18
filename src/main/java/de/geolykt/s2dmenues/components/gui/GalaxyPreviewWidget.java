@@ -63,12 +63,14 @@ public class GalaxyPreviewWidget extends Widget implements Disposable {
 
         public void updatePosition() {
             StarPath path = this.path;
+
             if (path == null) {
                 return;
             }
-            path.a();
+
+            path.tickPath();
             this.pathAngle += this.pathAngleVelocity;
-            this.rawPosition.set(path.b(this.pathAngle));
+            this.rawPosition.set(path.getPosition(this.pathAngle));
         }
     }
 

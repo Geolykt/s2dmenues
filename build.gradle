@@ -2,7 +2,7 @@ plugins {
     id 'java'
     id 'java-library'
     id 'maven-publish'
-    id 'gsl-starplane' version '0.2.5-a20260727'
+    id 'sml6' version '0.2.0-a20260818.1'
     id 'eclipse'
 }
 
@@ -30,38 +30,232 @@ repositories {
     mavenLocal()
 }
 
-starplane {
-    withRAS(rootProject.file("src/main/resources/s2dmenues.ras"))
-    mappingsFile("tinyv2", "newStarmap.tinyv2")
-    eclipseEEA = rootProject.file("src/eclipse-eea")
-}
-
-runMods {
-    from jar
-    systemProperties.put("org.stianloader.sll.log.MIRROR_MAVEN_REQUESTS", true)
-    systemProperties.put("org.stianloader.sll.log.level", "DEBUG")
-    systemProperties.put("classloader.dump", true)
-    systemProperties.put("org.stianloader.micromixin.debug", false)
-}
-
 configurations {
+    sllLauncher
+
+    compileOnly.extendsFrom(sllLauncher)
+
     dependencyMods
+
     compileOnlyApi.extendsFrom(dependencyMods)
-    compileOnlyApi.extendsFrom(devRuntime)
-    compileOnlyApi.extendsFrom(galimulatorDependencies)
 }
 
-deployMods {
-    from configurations["dependencyMods"]
-    remapMods = true
+
+task fetchGame(type: org.stianloader.sml6.tasks.FetchGameTask) {
+    steamApplicationName = 'Galimulator'
+    steamApplicationId = 808100
+    steamJarPath = 'jar/galimulator-desktop.jar'
+    outputs.upToDateWhen { false }
+}
+
+task deobfGame(type: org.stianloader.sml6.tasks.DeobfuscateGameTask) {
+    inputJar = fetchGame.outputJar
+}
+
+task stripGame(type: org.stianloader.sml6.tasks.StripDependenciesTask) {
+    inputJar = deobfGame.outputJar
+
+    stripGalimulatorDefaults502 {
+        configurations['compileOnlyApi'].extendsFrom(it)
+    }
+}
+
+task stripObfGame(type: org.stianloader.sml6.tasks.StripDependenciesTask) { // Required for properly generating member realms 
+    inputJar = fetchGame.outputJar
+    filteringEntryNames = stripGame.filteringEntryNames
+    strippingDependencies = stripGame.strippingDependencies
+}
+
+task remapGame(type: org.stianloader.sml6.tasks.RemapJarTask) {
+    inputJar = stripGame.outputJar
+    libraryJars = stripGame.strippingDependencies
+
+    archiveBaseName = "galimulator"
+    archiveClassifier = "remapped"
+    archiveVersion = deobfGame.autodeobfVersion
+    destinationDirectory = layout.buildDirectory.dir('sml6/remapGame')
+
+    addMappingsFile {
+        containerFormat = XZ
+        mappingFormat = TINY_2
+        downloadMavenResource("de.geolykt:bstarmap:${bStarmapVersion}@tinyv2.xz", 'stianloader-nightlies', 'https://stianloader.org/maven/')
+    }
+}
+
+task genSources(type: org.stianloader.sml6.tasks.GenerateSourcesTask) {
+    inputJar = remapGame.archiveFile
+    libraryClasspath = stripGame.strippingDependencies
+
+    outputSourcesJar = outputDirectory.file('galimulator-remapped-5.0.2-sources.jar')
+    lineRemappedOutputJar = outputDirectory.file('galimulator-remapped-5.0.2.jar')
+
+    decompileOptions {
+        removeSynthetic = false
+        verifyAnonymousClasses = true
+        includeJavaRuntime = true
+    }
+}
+
+compileJava {
+    dependsOn tasks.named('genSources')
+}
+
+task remapJar(type: org.stianloader.sml6.tasks.RemapJarTask) {
+    inputJar = jar.archiveFile
+    libraryJars = configurations.named('compileClasspath')
+
+    archiveBaseName = jar.archiveBaseName
+    archiveClassifier = 'remapped'
+    archiveVersion = jar.archiveVersion
+    destinationDirectory = base.libsDirectory
+
+    addMappingsFile {
+        containerFormat = XZ
+        mappingFormat = TINY_2
+        downloadMavenResource("de.geolykt:bstarmap:${bStarmapVersion}@tinyv2.xz", 'stianloader-nightlies', 'https://stianloader.org/maven/')
+        srcNamespaceId = 0
+        dstNamespaceId = -1
+    }
+
+    addMappingsFile {
+        containerFormat = PLAIN
+        mappingFormat = TINY
+        mappingSource = deobfGame.spStarmapMappings
+        srcNamespaceId = 0
+        dstNamespaceId = -1
+    }
+
+    addMappingsFile {
+        containerFormat = PLAIN
+        mappingFormat = TINY
+        mappingSource = deobfGame.slIntermediaryMappings
+        srcNamespaceId = 0
+        dstNamespaceId = -1 // This inverts source and destination namespaces (default source namespace id is -1)
+    }
+}
+
+task deployMods(type: org.stianloader.sml6.tasks.DeployModsTask) {
+    dependsOn stripObfGame // Required for the artifact transform to not blow up
+
+    mods = configurations.named('dependencyMods').map {
+        it.incoming.artifactView {
+            attributes {
+                attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, 'predeploy-mod')
+            }
+        }.files
+    }
+}
+
+task runMods(type: org.stianloader.sml6.tasks.SLLJavaExecTask) {
+    dependsOn tasks.named('deployMods')
+
+    classpath configurations['sllLauncher']
+
+    bootGameDependencies = stripGame.strippingDependencies
+    bootGameJar = genSources.lineRemappedOutputJar
+    gameMainClass = 'com.example.Main'
+
+    usingModSourceSet(tasks.named('compileJava'), java.sourceSets.named('main'))
+
+    systemProperties.put('classloader.dump', 'true')
+    systemProperties.put('org.stianloader.sll.log.level', 'DEBUG')
+    systemProperties.put('org.stianloader.micromixin.debug', true)
+
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(17)
+        vendor = JvmVendorSpec.JETBRAINS
+    }
+}
+
+eclipse {
+    synchronizationTasks genSources
+}
+
+build {
+    dependsOn tasks.named('remapJar')
+}
+
+task genEclipseRuns(type: org.stianloader.sml6.tasks.GenerateEclipseRunTask) {
+    dependsOn tasks.named('deployMods')
+    from tasks.named('runMods')
+}
+
+repositories.flatDir {
+    dir genSources.outputDirectory
+    name = 'galimulator-sources-dir'
+
+    content {
+        includeModule('', 'galimulator-remapped')
+    }
 }
 
 dependencies {
-    dependencyMods("de.geolykt:starloader-api:2.0.0-a20260214:remapped")
-    devRuntime "org.stianloader:launcher-micromixin:4.0.0-a20250819"
-    compileOnly "org.stianloader:micromixin-annotations:0.6.2-a20240731"
-    compileOnly "de.geolykt.starloader:starplane-annotations:1.0.0"
-    compileOnlyApi "org.jetbrains:annotations:26.0.2-1"
+    attributesSchema {
+        attribute(org.stianloader.sml6.transforms.attributes.RASTransform.RAS_TRANSFORM_ATTRIBUTE) {
+            disambiguationRules.add(org.stianloader.sml6.transforms.attributes.RASDisambiguationRule)
+            compatibilityRules.add(org.stianloader.sml6.transforms.attributes.RASCompatibilityRule)
+        }
+    }
+
+    artifactTypes {
+        named(ArtifactTypeDefinition.JAR_TYPE) {
+            attributes.attribute(org.stianloader.sml6.transforms.attributes.RASTransform.RAS_TRANSFORM_ATTRIBUTE, objects.named(org.stianloader.sml6.transforms.attributes.RASTransform, 'transform'))
+        }
+    }
+
+    registerTransform(org.stianloader.sml6.transforms.RemapArtifactTransform) {
+        from.attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, 'jar')
+        to.attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, 'predeploy-mod')
+
+        parameters {
+            libraryJars.from(stripObfGame.outputJar)
+
+            addMappingsFile {
+                containerFormat = PLAIN
+                mappingFormat = TINY
+                mappingSource = deobfGame.slIntermediaryMappings
+            }
+
+            addMappingsFile {
+                containerFormat = PLAIN
+                mappingFormat = TINY
+                mappingSource = deobfGame.spStarmapMappings
+            }
+
+            addMappingsFile {
+                containerFormat = XZ
+                mappingFormat = TINY_2
+                downloadMavenResource("de.geolykt:bstarmap:${bStarmapVersion}@tinyv2.xz", 'stianloader-nightlies', 'https://stianloader.org/maven/')
+            }
+        }
+    }
+
+    registerTransform(org.stianloader.sml6.transforms.ApplyRASArtifactTransform) {
+        from.attribute(org.stianloader.sml6.transforms.attributes.RASTransform.RAS_TRANSFORM_ATTRIBUTE, objects.named(org.stianloader.sml6.transforms.attributes.RASTransform, 'transform'))
+        to.attribute(org.stianloader.sml6.transforms.attributes.RASTransform.RAS_TRANSFORM_ATTRIBUTE, objects.named(org.stianloader.sml6.transforms.attributes.RASTransform, 'transform-buildtime'))
+
+        parameters {
+            scope = BUILDTIME
+            inputFile = project.file('src/main/resources/s2dmenues.ras')
+            outputArtifactType = ''
+        }
+    }
+
+    sllLauncher 'org.stianloader:launcher-micromixin:4.0.0-a20260611'
+
+    compileOnly(':galimulator-remapped:5.0.2') {
+        attributes {
+            attribute(org.stianloader.sml6.transforms.attributes.RASTransform.RAS_TRANSFORM_ATTRIBUTE, objects.named(org.stianloader.sml6.transforms.attributes.RASTransform, 'transform-buildtime'))
+        }
+    }
+
+    dependencyMods('de.geolykt:starloader-api:2.0.0-a20260214:remapped') {
+        transitive = false
+    }
+
+    compileOnly 'org.stianloader:micromixin-annotations:0.6.2-a20240731'
+    compileOnly 'de.geolykt.starloader:starplane-annotations:1.0.0'
+    compileOnlyApi 'org.jetbrains:annotations:26.1.0'
 
     compileOnly("com.github.raeleus.TenPatch:tenpatch:$tenpatchVersion") {
         exclude group: 'com.badlogicgames.gdx', module: 'gdx'
@@ -73,26 +267,21 @@ dependencies {
 }
 
 processResources {
-    filesMatching("extension.json") {
-        expand(project.properties)
+    def version = project.property('version')
+    def tenpatchVersion = project.property('tenpatchVersion')
+    def textraTypistVersion = project.property('textraTypistVersion')
+
+    inputs.property('version', version)
+    inputs.property('tenpatchVersion', tenpatchVersion)
+    inputs.property('textraTypistVersion', textraTypistVersion)
+
+    filesMatching('extension.json') {
+        expand(
+            'version': version,
+            'tenpatchVersion': tenpatchVersion,
+            'textraTypistVersion': textraTypistVersion
+        )
     }
-}
-
-genEclipseRuns {
-    propertyExpansionSource = project.file("gradle.properties")
-}
-
-remapJar {
-    archiveClassifier = 'remapped'
-    fromJar jar
-}
-
-build {
-    dependsOn remapJar
-}
-
-publish {
-    dependsOn publishToMavenLocal // Gradle doesn't quite like this line but otherwise I get issues when publishing so what gives?
 }
 
 publishing {
@@ -102,9 +291,10 @@ publishing {
             artifactId = project.base.archivesName.get()
 
             from components['java']
-            artifact remapJar
+            artifact remapJar.asArtifact()
         }
     }
+
     repositories {
         if (System.getProperty('publishRepo') != null) {
             maven {
@@ -113,6 +303,18 @@ publishing {
             }
         } else {
             mavenLocal()
+        }
+    }
+}
+
+eclipse {
+    classpath {
+      containers 'org.eclipse.buildship.core.gradleclasspathcontainer'
+      file {
+            whenMerged {
+                def source = entries.find { it.path == 'org.eclipse.buildship.core.gradleclasspathcontainer' }
+                source.entryAttributes['annotationpath'] = 'src/eclipse-eea'
+            }
         }
     }
 }

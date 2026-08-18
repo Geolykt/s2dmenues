@@ -48,6 +48,7 @@ public class FontConfig {
         }
 
         @Override
+        @NotNull
         public String toString() {
             Path outer = this.outerPath;
 

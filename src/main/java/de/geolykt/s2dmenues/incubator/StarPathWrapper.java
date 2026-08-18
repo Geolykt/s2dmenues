@@ -26,8 +26,8 @@ public class StarPathWrapper implements StarMovementPath {
     @Override
     @NotNull
     public Vector2 update(@NotNull Vector2 location) {
-        this.path.a();
+        this.path.tickPath();
         this.pathAngle += this.pathAngleVelocity;
-        return location.set(this.path.b(this.pathAngle)).scl(this.sclX, this.sclY);
+        return location.set(this.path.getPosition(this.pathAngle)).scl(this.sclX, this.sclY);
     }
 }
