@@ -2,7 +2,7 @@ plugins {
     id 'java'
     id 'java-library'
     id 'maven-publish'
-    id 'sml6' version '0.2.0-a20260818.1'
+    id 'sml6' version '0.2.0-a20260820.2'
     id 'eclipse'
 }
 
@@ -46,6 +46,8 @@ task fetchGame(type: org.stianloader.sml6.tasks.FetchGameTask) {
     steamApplicationId = 808100
     steamJarPath = 'jar/galimulator-desktop.jar'
     outputs.upToDateWhen { false }
+
+    symlinkDirectories = [ "data" ]
 }
 
 task deobfGame(type: org.stianloader.sml6.tasks.DeobfuscateGameTask) {
@@ -60,7 +62,7 @@ task stripGame(type: org.stianloader.sml6.tasks.StripDependenciesTask) {
     }
 }
 
-task stripObfGame(type: org.stianloader.sml6.tasks.StripDependenciesTask) { // Required for properly generating member realms 
+task stripObfGame(type: org.stianloader.sml6.tasks.StripDependenciesTask) { // Required for properly generating member realms in the obfuscated namespace
     inputJar = fetchGame.outputJar
     filteringEntryNames = stripGame.filteringEntryNames
     strippingDependencies = stripGame.strippingDependencies
@@ -136,6 +138,7 @@ task remapJar(type: org.stianloader.sml6.tasks.RemapJarTask) {
 
 task deployMods(type: org.stianloader.sml6.tasks.DeployModsTask) {
     dependsOn stripObfGame // Required for the artifact transform to not blow up
+    dependsOn deobfGame
 
     mods = configurations.named('dependencyMods').map {
         it.incoming.artifactView {
@@ -180,12 +183,16 @@ task genEclipseRuns(type: org.stianloader.sml6.tasks.GenerateEclipseRunTask) {
     from tasks.named('runMods')
 }
 
-repositories.flatDir {
-    dir genSources.outputDirectory
-    name = 'galimulator-sources-dir'
+org.stianloader.sml6.WellOfDespair.registerDependency(project, configurations.named('compileOnly')) {
+    configurationName = 'galimulatorElements'
+    capabilityName = 'org.stianloader:galimulator:5.0.2'
+    artifactJar = genSources.lineRemappedOutputJar
+    sourcesJar = genSources.outputSourcesJar
 
-    content {
-        includeModule('', 'galimulator-remapped')
+    dependency {
+        attributes {
+            attribute(org.stianloader.sml6.transforms.attributes.RASTransform.RAS_TRANSFORM_ATTRIBUTE, objects.named(org.stianloader.sml6.transforms.attributes.RASTransform, 'transform-buildtime'))
+        }
     }
 }
 
@@ -242,12 +249,6 @@ dependencies {
     }
 
     sllLauncher 'org.stianloader:launcher-micromixin:4.0.0-a20260611'
-
-    compileOnly(':galimulator-remapped:5.0.2') {
-        attributes {
-            attribute(org.stianloader.sml6.transforms.attributes.RASTransform.RAS_TRANSFORM_ATTRIBUTE, objects.named(org.stianloader.sml6.transforms.attributes.RASTransform, 'transform-buildtime'))
-        }
-    }
 
     dependencyMods('de.geolykt:starloader-api:2.0.0-a20260214:remapped') {
         transitive = false
