@@ -58,7 +58,7 @@ public class MainMenuProvider {
             }
         }
 
-        try (LockScope lock = Galimulator.getSimulationLoopLock().acquireHardControlWithResources()) {
+        try (LockScope _ = Galimulator.getSimulationLoopLock().acquireHardControlWithResources()) {
             Galimulator.setPaused(true);
             MainMenuProvider.display0();
         } catch (InterruptedException ex) {
@@ -105,7 +105,7 @@ public class MainMenuProvider {
             backgroundDrawable = new CroppingTextureDrawable(backgroundTexture, true);
         }
 
-        MainMenuStage stage = new MainMenuStage(backgroundDrawable, true);
+        S2DBaseStage stage = new S2DBaseStage(backgroundDrawable, true);
 
         VerticalGroup buttons = new VerticalGroup();
 

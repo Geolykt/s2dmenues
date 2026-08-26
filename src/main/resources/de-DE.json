@@ -12,6 +12,7 @@
     "s2dmenues:dialog.galgen.title": "Galaxie generieren",
     "s2dmenues:dialog.galgen.error.reflection": "Es is ein interner Fehler aufgetreten. Wir bitten um Entschuldigung.",
     "s2dmenues:dialog.galgen.button.confirm": "Spiel starten",
+    "s2dmenues:dialog.galgen.button.confirm.s2d": "Spiel starten [RED](Experimentell)[]",
     "s2dmenues:dialog.galgen.button.size": "Anzahl sterne [GRAY](%s2dmenues:dialogs.generate_galaxy.size%)[]",
     "s2dmenues:dialog.galgen.button.type": "Sternengenerator",
     "s2dmenues:dialog.galgen.button.generator_options": "Generator einstellen",

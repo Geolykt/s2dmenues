@@ -14,14 +14,14 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
-public class MainMenuStage extends Stage {
+public class S2DBaseStage extends Stage {
 
     @NotNull
     private final Drawable background;
     private final List<@NotNull Runnable> cleanupHandlers = new ArrayList<>();
     private final boolean disposeBackground;
 
-    public MainMenuStage(@NotNull Drawable background, boolean disposeBackground) {
+    public S2DBaseStage(@NotNull Drawable background, boolean disposeBackground) {
         super(new FitViewport(1760, 990));
 
         this.background = background;
@@ -30,6 +30,10 @@ public class MainMenuStage extends Stage {
 
     public void addCleanupHandler(@NotNull Runnable handler) {
         this.cleanupHandlers.add(Objects.requireNonNull(handler, "'handler' may not be null"));
+    }
+
+    public void addDisposeableResource(@NotNull Disposable resource) {
+        this.cleanupHandlers.add(resource::dispose);
     }
 
     @Override

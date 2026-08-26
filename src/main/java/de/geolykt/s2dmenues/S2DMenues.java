@@ -1,6 +1,8 @@
 package de.geolykt.s2dmenues;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -27,20 +29,28 @@ import de.geolykt.starloader.api.event.lifecycle.ApplicationStartedEvent;
 import de.geolykt.starloader.api.event.lifecycle.ApplicationStopEvent;
 import de.geolykt.starloader.api.event.lifecycle.AtlasPackedEvent;
 import de.geolykt.starloader.api.event.lifecycle.AtlasPackingEvent;
+import de.geolykt.starloader.api.resource.DataFolderProvider;
 import de.geolykt.starloader.mod.Extension;
 
 public class S2DMenues extends Extension {
 
-    public static final String MOD_ID = "s2dmenues"; // This is giving off FML vibes. Oh well, nostalgia is a good thing, no?
+    @Nullable
+    private static JSONObject loadedConfig;
 
     @NotNull
     public static final Path MOD_DATA_DIR = Starloader.getInstance().getModDirectory().resolve(S2DMenues.MOD_ID);
 
+    public static final String MOD_ID = "s2dmenues"; // This is giving me FML vibes. Oh well, nostalgia is a good thing, no?
+
     @NotNull
     public static final AtomicBoolean MOD_OPTION_REVISED_GALAXY_TYPE_SELECTION = new AtomicBoolean(true);
 
-    @Nullable
-    private static JSONObject loadedConfig;
+    static {
+        if (com.badlogic.gdx.Version.isLower(1, 14, 0)) {
+            LoggerFactory.getLogger(S2DMenues.class).warn("The runtime version of libGDX is out of date. Using Mass ASM for compatibility.");
+            MinestomRootClassLoader.getInstance().addASMTransformer(new TextraMASMTransformer());
+        }
+    }
 
     public static void loadConfig() throws IOException {
         Path loadedConfigPath = S2DMenues.MOD_DATA_DIR.resolve("config.json");
@@ -76,6 +86,58 @@ public class S2DMenues extends Extension {
         S2DI18N.start(i18nJson);
     }
 
+    @NotNull
+    public static String readStringFromResources(@NotNull String filepath) {
+        Path resourceLocation = DataFolderProvider.getProvider().provideAsPath().resolve("mods").resolve(S2DMenues.MOD_ID).resolve(filepath);
+
+        if (Files.notExists(resourceLocation)) {
+            resourceLocation = S2DMenues.MOD_DATA_DIR.resolve(filepath);
+
+            if (Files.notExists(resourceLocation)) {
+                try (InputStream is = S2DMenues.class.getClassLoader().getResourceAsStream(filepath)) {
+                    if (is == null) {
+                        throw new IOException("Resource '" + filepath + "' is not located within the mod's classpath.");
+                    }
+
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    byte[] buffer = new byte[4096];
+
+                    for (int read = is.read(buffer); read != -1; read = is.read(buffer)) {
+                        baos.write(buffer, 0, read);
+                    }
+
+                    return new String(baos.toByteArray(), StandardCharsets.UTF_8);
+                } catch (IOException e) {
+                    throw new UncheckedIOException("Unable to read string from jar", e);
+                }
+            }
+        }
+
+        try {
+            return new String(Files.readAllBytes(resourceLocation), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    public static synchronized void saveConfig() {
+        JSONObject loadedConfig = S2DMenues.loadedConfig;
+
+        if (loadedConfig == null) {
+            throw new IllegalStateException("'loadedConfig' is null. #saveConfig called before #loadConfig?");
+        }
+
+        loadedConfig.put("font", FontConfig.getInstance().saveConfig());
+        loadedConfig.put("i18n", S2DI18N.saveConfig());
+        loadedConfig.put("revised-galaxy-type-selection", S2DMenues.MOD_OPTION_REVISED_GALAXY_TYPE_SELECTION.get());
+
+        try {
+            Files.write(S2DMenues.MOD_DATA_DIR.resolve("config.json"), loadedConfig.toString(2).getBytes(StandardCharsets.UTF_8));
+        } catch (JSONException | IOException e) {
+            LoggerFactory.getLogger(S2DMenues.class).error("Cannot save configuration file.", e);
+        }
+    }
+
     @Override
     public void initialize() {
         try {
@@ -98,13 +160,8 @@ public class S2DMenues extends Extension {
 
         EventManager.registerListener(new Listener() {
             @EventHandler
-            public void onStop(@NotNull ApplicationStopEvent evt) {
-                try {
-                    Styles.getInstance().dispose();
-                    TextureCache.getInstance().dispose();
-                } catch (RuntimeException e) {
-                    S2DMenues.this.getLogger().error("Unable to dispose resources. The exception itself probably doesn't cause any harm, but it is adviseable to look into it's cause.", e);
-                }
+            public void onAtlasSitched(@NotNull AtlasPackedEvent evt) throws IOException {
+                FontConfig.getInstance().bakeFonts(evt);
             }
 
             @EventHandler
@@ -113,34 +170,14 @@ public class S2DMenues extends Extension {
             }
 
             @EventHandler
-            public void onAtlasSitched(@NotNull AtlasPackedEvent evt) throws IOException {
-                FontConfig.getInstance().bakeFonts(evt);
+            public void onStop(@NotNull ApplicationStopEvent evt) {
+                try {
+                    Styles.getInstance().dispose();
+                    TextureCache.getInstance().dispose();
+                } catch (RuntimeException e) {
+                    S2DMenues.this.getLogger().error("Unable to dispose resources. The exception itself probably doesn't cause any harm, but it is adviseable to look into it's cause.", e);
+                }
             }
         });
-    }
-
-    public static synchronized void saveConfig() {
-        JSONObject loadedConfig = S2DMenues.loadedConfig;
-
-        if (loadedConfig == null) {
-            throw new IllegalStateException("'loadedConfig' is null. #saveConfig called before #loadConfig?");
-        }
-
-        loadedConfig.put("font", FontConfig.getInstance().saveConfig());
-        loadedConfig.put("i18n", S2DI18N.saveConfig());
-        loadedConfig.put("revised-galaxy-type-selection", S2DMenues.MOD_OPTION_REVISED_GALAXY_TYPE_SELECTION.get());
-
-        try {
-            Files.write(S2DMenues.MOD_DATA_DIR.resolve("config.json"), loadedConfig.toString(2).getBytes(StandardCharsets.UTF_8));
-        } catch (JSONException | IOException e) {
-            LoggerFactory.getLogger(S2DMenues.class).error("Cannot save configuration file.", e);
-        }
-    }
-
-    static {
-        if (com.badlogic.gdx.Version.isLower(1, 14, 0)) {
-            LoggerFactory.getLogger(S2DMenues.class).warn("The runtime version of libGDX is out of date. Using Mass ASM for compatibility.");
-            MinestomRootClassLoader.getInstance().addASMTransformer(new TextraMASMTransformer());
-        }
     }
 }

@@ -2,7 +2,7 @@ plugins {
     id 'java'
     id 'java-library'
     id 'maven-publish'
-    id 'sml6' version '0.2.0-a20260820.2'
+    id 'sml6' version '0.3.0-a20260826'
     id 'eclipse'
 }
 
@@ -13,7 +13,7 @@ base {
     archivesName = 's2dmenues'
 }
 
-java.targetCompatibility = compileJava.targetCompatibility = java.sourceCompatibility = compileJava.sourceCompatibility = '1.8'
+java.targetCompatibility = compileJava.targetCompatibility = java.sourceCompatibility = compileJava.sourceCompatibility = '25'
 
 repositories {
     maven {
@@ -32,14 +32,17 @@ repositories {
 
 configurations {
     sllLauncher
+    lwjgl3Classpath
+    runtimeGalimulator
 
     compileOnly.extendsFrom(sllLauncher)
 
     dependencyMods
 
     compileOnlyApi.extendsFrom(dependencyMods)
+    compileOnlyApi.extendsFrom(lwjgl3Classpath)
+    compileOnly.extendsFrom(runtimeGalimulator)
 }
-
 
 task fetchGame(type: org.stianloader.sml6.tasks.FetchGameTask) {
     steamApplicationName = 'Galimulator'
@@ -47,7 +50,7 @@ task fetchGame(type: org.stianloader.sml6.tasks.FetchGameTask) {
     steamJarPath = 'jar/galimulator-desktop.jar'
     outputs.upToDateWhen { false }
 
-    symlinkDirectories = [ "data" ]
+    symlinkDirectories = [ 'data' ]
 }
 
 task deobfGame(type: org.stianloader.sml6.tasks.DeobfuscateGameTask) {
@@ -56,10 +59,7 @@ task deobfGame(type: org.stianloader.sml6.tasks.DeobfuscateGameTask) {
 
 task stripGame(type: org.stianloader.sml6.tasks.StripDependenciesTask) {
     inputJar = deobfGame.outputJar
-
-    stripGalimulatorDefaults502 {
-        configurations['compileOnlyApi'].extendsFrom(it)
-    }
+    stripGalimulatorDefaults502()
 }
 
 task stripObfGame(type: org.stianloader.sml6.tasks.StripDependenciesTask) { // Required for properly generating member realms in the obfuscated namespace
@@ -72,8 +72,8 @@ task remapGame(type: org.stianloader.sml6.tasks.RemapJarTask) {
     inputJar = stripGame.outputJar
     libraryJars = stripGame.strippingDependencies
 
-    archiveBaseName = "galimulator"
-    archiveClassifier = "remapped"
+    archiveBaseName = 'galimulator'
+    archiveClassifier = 'remapped'
     archiveVersion = deobfGame.autodeobfVersion
     destinationDirectory = layout.buildDirectory.dir('sml6/remapGame')
 
@@ -149,27 +149,6 @@ task deployMods(type: org.stianloader.sml6.tasks.DeployModsTask) {
     }
 }
 
-task runMods(type: org.stianloader.sml6.tasks.SLLJavaExecTask) {
-    dependsOn tasks.named('deployMods')
-
-    classpath configurations['sllLauncher']
-
-    bootGameDependencies = stripGame.strippingDependencies
-    bootGameJar = genSources.lineRemappedOutputJar
-    gameMainClass = 'com.example.Main'
-
-    usingModSourceSet(tasks.named('compileJava'), java.sourceSets.named('main'))
-
-    systemProperties.put('classloader.dump', 'true')
-    systemProperties.put('org.stianloader.sll.log.level', 'DEBUG')
-    systemProperties.put('org.stianloader.micromixin.debug', true)
-
-    javaLauncher = javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(17)
-        vendor = JvmVendorSpec.JETBRAINS
-    }
-}
-
 eclipse {
     synchronizationTasks genSources
 }
@@ -178,12 +157,7 @@ build {
     dependsOn tasks.named('remapJar')
 }
 
-task genEclipseRuns(type: org.stianloader.sml6.tasks.GenerateEclipseRunTask) {
-    dependsOn tasks.named('deployMods')
-    from tasks.named('runMods')
-}
-
-org.stianloader.sml6.WellOfDespair.registerDependency(project, configurations.named('compileOnly')) {
+org.stianloader.sml6.WellOfDespair.registerDependency(project, configurations.named('runtimeGalimulator')) {
     configurationName = 'galimulatorElements'
     capabilityName = 'org.stianloader:galimulator:5.0.2'
     artifactJar = genSources.lineRemappedOutputJar
@@ -192,6 +166,15 @@ org.stianloader.sml6.WellOfDespair.registerDependency(project, configurations.na
     dependency {
         attributes {
             attribute(org.stianloader.sml6.transforms.attributes.RASTransform.RAS_TRANSFORM_ATTRIBUTE, objects.named(org.stianloader.sml6.transforms.attributes.RASTransform, 'transform-buildtime'))
+            attribute(org.stianloader.sml6.transforms.attributes.LWJGLVersion.LWJGL_VERSION_ATTRIBUTE, 3)
+        }
+    }
+
+    configuration {
+        outgoing {
+            attributes {
+                attribute(org.stianloader.sml6.transforms.attributes.LWJGLVersion.LWJGL_VERSION_ATTRIBUTE, 2)
+            }
         }
     }
 }
@@ -202,6 +185,7 @@ dependencies {
             disambiguationRules.add(org.stianloader.sml6.transforms.attributes.RASDisambiguationRule)
             compatibilityRules.add(org.stianloader.sml6.transforms.attributes.RASCompatibilityRule)
         }
+        attribute(org.stianloader.sml6.transforms.attributes.LWJGLVersion.LWJGL_VERSION_ATTRIBUTE)
     }
 
     artifactTypes {
@@ -248,9 +232,18 @@ dependencies {
         }
     }
 
+    registerTransform(org.stianloader.sml6.transforms.MigrateLWJGL3ArtifactTransform) {
+        from.attribute(org.stianloader.sml6.transforms.attributes.LWJGLVersion.LWJGL_VERSION_ATTRIBUTE, 2)
+        to.attribute(org.stianloader.sml6.transforms.attributes.LWJGLVersion.LWJGL_VERSION_ATTRIBUTE, 3)
+    }
+
     sllLauncher 'org.stianloader:launcher-micromixin:4.0.0-a20260611'
 
-    dependencyMods('de.geolykt:starloader-api:2.0.0-a20260214:remapped') {
+    dependencyMods('de.geolykt:starloader-api:2.0.0:remapped') {
+        transitive = false
+    }
+
+    dependencyMods("de.geolykt:star-cell-shading:${starCellShadingVersion}:remapped") {
         transitive = false
     }
 
@@ -265,22 +258,66 @@ dependencies {
     compileOnly("com.github.tommyettinger:textratypist:$textraTypistVersion") {
         exclude group: 'com.badlogicgames.gdx', module: 'gdx'
     }
+
+    // Source: https://mvnrepository.com/artifact/com.code-disaster.steamworks4j/steamworks4j-gdx
+    lwjgl3Classpath 'com.code-disaster.steamworks4j:steamworks4j-gdx:1.10.0'
+    // Source: https://mvnrepository.com/artifact/com.badlogicgames.gdx/gdx-backend-lwjgl3
+    lwjgl3Classpath 'com.badlogicgames.gdx:gdx-backend-lwjgl3:1.14.2'
+    // Source: https://mvnrepository.com/artifact/com.badlogicgames.gdx/gdx-platform
+    lwjgl3Classpath 'com.badlogicgames.gdx:gdx-platform:1.14.2:natives-desktop'
+    lwjgl3Classpath 'com.thoughtworks.xstream:xstream:1.4.7'
+
+    runtimeGalimulator 'org.stianloader:lwjgl3ify:2.0.0-a20260820'
+}
+
+task runMods(type: org.stianloader.sml6.tasks.SLLJavaExecTask) {
+    dependsOn tasks.named('deployMods')
+
+    classpath configurations.named('sllLauncher')
+
+    bootFiles.from(configurations.named('lwjgl3Classpath'))
+    bootFiles.from(configurations.named('runtimeGalimulator'))
+
+    gameMainClass = 'com.example.Main'
+
+    usingModSourceSet(tasks.named('compileJava'), java.sourceSets.named('main'))
+
+    systemProperties.put('classloader.dump', 'true')
+    systemProperties.put('org.stianloader.sll.log.level', 'DEBUG')
+    systemProperties.put('org.stianloader.micromixin.debug', true)
+    systemProperties.put('org.stianloader.lwjgl3ify.killOnReturn', true)
+
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(25)
+        //vendor = JvmVendorSpec.JETBRAINS
+    }
+
+    renderdocExecutable = 'renderdoc_1.45/bin/renderdoccmd'
+}
+
+task genEclipseRuns(type: org.stianloader.sml6.tasks.GenerateEclipseRunTask) {
+    dependsOn tasks.named('deployMods')
+    from tasks.named('runMods')
+    notCompatibleWithConfigurationCache('Upstream SML6 issue.');
 }
 
 processResources {
     def version = project.property('version')
     def tenpatchVersion = project.property('tenpatchVersion')
     def textraTypistVersion = project.property('textraTypistVersion')
+    def starCellShadingVersion = project.property('starCellShadingVersion')
 
     inputs.property('version', version)
     inputs.property('tenpatchVersion', tenpatchVersion)
     inputs.property('textraTypistVersion', textraTypistVersion)
+    inputs.property('starCellShadingVersion', starCellShadingVersion)
 
     filesMatching('extension.json') {
         expand(
             'version': version,
             'tenpatchVersion': tenpatchVersion,
-            'textraTypistVersion': textraTypistVersion
+            'textraTypistVersion': textraTypistVersion,
+            'starCellShadingVersion': starCellShadingVersion
         )
     }
 }

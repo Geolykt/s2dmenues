@@ -8,6 +8,8 @@ bin
 mods
 classes
 data
+*.dat
 
 *.png
 !src/main/resources/*.png
+renderdoc_1.45

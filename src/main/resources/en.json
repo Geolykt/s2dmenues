@@ -12,6 +12,7 @@
     "s2dmenues:dialog.galgen.title": "Generate galaxy",
     "s2dmenues:dialog.galgen.error.reflection": "A reflective error occured. Please take a look at the logs. Sorry!",
     "s2dmenues:dialog.galgen.button.confirm": "Start game",
+    "s2dmenues:dialog.galgen.button.confirm.s2d": "Start game [RED](experimental)[]",
     "s2dmenues:dialog.galgen.button.size": "Star count [GRAY](%s2dmenues:dialogs.generate_galaxy.size%)[]",
     "s2dmenues:dialog.galgen.button.type": "Galaxy type",
     "s2dmenues:dialog.galgen.button.generator_options": "Generator options",

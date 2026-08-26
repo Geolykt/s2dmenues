@@ -154,7 +154,7 @@ public class UIUtil {
             aquaEphemeralButtonStyle.down = new LAFAquaEphemeralButtonDrawable(4F, Color.toFloatBits(1F, 207.0F / 256.0F, 1F, 1F), enabledVertices);
             aquaEphemeralButtonStyle.disabled = new LAFAquaEphemeralButtonDrawable(4F, enabledVertices);
 
-            TextraButton button = new RunnableTextraButton(textifier.apply(orderedElement), aquaEphemeralButtonStyle, (clickedButton, clickedEvent) -> {
+            TextraButton button = new RunnableTextraButton(textifier.apply(orderedElement), aquaEphemeralButtonStyle, (_, clickedEvent) -> {
                 onClick.accept(orderedElement, clickedEvent);
             });
 

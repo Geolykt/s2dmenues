@@ -391,10 +391,6 @@ public class FontConfig {
     public FontPrimitive getPreferredFontPrimitive() {
         if (!this.discoveredBuiltins) {
             for (String fntName : Drawing.getFonts()) {
-                if (fntName == null) {
-                    throw new AssertionError();
-                }
-
                 BitmapFont bmf = Drawing.getFontBitmap(fntName);
 
                 if (bmf == null) {

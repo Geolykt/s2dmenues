@@ -50,6 +50,7 @@ import de.geolykt.s2dmenues.components.msdf.RunnableTextraButton;
 import de.geolykt.s2dmenues.incubator.StarPlacementGenerator;
 import de.geolykt.s2dmenues.incubator.StarPlacementGeneratorCategory;
 import de.geolykt.s2dmenues.incubator.StarPlacementRegistry;
+import de.geolykt.s2dmenues.render.S2DRenderStageProvider;
 import de.geolykt.starloader.api.NamespacedKey;
 import de.geolykt.starloader.api.empire.StarlaneGenerator;
 import de.geolykt.starloader.api.gui.Drawing;
@@ -94,6 +95,8 @@ public class GenGalaxyWindow extends LAFAquaDialog implements Disposable, Placeh
     @NotNull
     private final TextraButton galaxyGenerateButton;
     @NotNull
+    private final TextraButton galaxyGenerateToS2DButton;
+    @NotNull
     private final GalaxyPreviewWidget galaxyPreview;
     private int galaxySize;
     @NotNull
@@ -121,12 +124,20 @@ public class GenGalaxyWindow extends LAFAquaDialog implements Disposable, Placeh
         this.contentTableUpper = new Table();
         this.masterSplitPane = new SplitPane(this.contentTableUpper, null, true, Styles.getInstance().splitPaneStyle);
 
-        this.galaxyGenerateButton = new RunnableTextraButton(this.translate("dialog.galgen.button.confirm"), Styles.getInstance().confirmButtonStyle, (button) -> {
+        this.galaxyGenerateButton = new RunnableTextraButton(this.translate("dialog.galgen.button.confirm"), Styles.getInstance().confirmButtonStyle, (_) -> {
             this.mapdata.setConnectionMethod((ConnectionMethod) this.starlaneGenerator);
             this.mapdata.setStarAdjustmentMethod(this.adjustmentMethod);
             this.mapdata.setScenarioSource(this.currentScenarioSource);
             Space.generateGalaxySync(this.galaxySize, this.mapdata);
             Drawing.setShownStage(null);
+        });
+
+        this.galaxyGenerateToS2DButton = new RunnableTextraButton(this.translate("dialog.galgen.button.confirm.s2d"), Styles.getInstance().confirmButtonStyle, (_) -> {
+            this.mapdata.setConnectionMethod((ConnectionMethod) this.starlaneGenerator);
+            this.mapdata.setStarAdjustmentMethod(this.adjustmentMethod);
+            this.mapdata.setScenarioSource(this.currentScenarioSource);
+            Space.generateGalaxySync(this.galaxySize, this.mapdata);
+            S2DRenderStageProvider.openStage();
         });
 
         this.galaxySizeButton = UIUtil.createUnsignedIntInputButton(this.translate("dialog.galgen.button.size"), this::setGalaxySize);
@@ -301,6 +312,8 @@ public class GenGalaxyWindow extends LAFAquaDialog implements Disposable, Placeh
         options.addActor(this.starlaneGeneratorButton);
         options.addActor(this.scenarioButton);
         options.addActor(new NOPActor(15, 15));
+        options.addActor(this.galaxyGenerateToS2DButton);
+        options.addActor(new NOPActor(15, 15));
 
         this.getContentTable().add(this.masterSplitPane).center().left().grow();
 
@@ -472,7 +485,7 @@ public class GenGalaxyWindow extends LAFAquaDialog implements Disposable, Placeh
         Map<@NotNull StarPlacementGeneratorCategory, Set<@NotNull StarPlacementGenerator>> categories = new HashMap<>();
 
         for (StarPlacementGenerator generator : StarPlacementRegistry.GENERATOR_REGISTRY.valuesView()) {
-            categories.compute(generator.getCategory(), (var10001, collection) -> {
+            categories.compute(generator.getCategory(), (_, collection) -> {
                 if (collection == null) {
                     collection = new HashSet<>();
                 }
