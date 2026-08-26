@@ -15,6 +15,12 @@ base {
 
 java.targetCompatibility = compileJava.targetCompatibility = java.sourceCompatibility = compileJava.sourceCompatibility = '25'
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
 repositories {
     maven {
         name = 'stianloader-maven'
