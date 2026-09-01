@@ -2,7 +2,7 @@ plugins {
     id 'java'
     id 'java-library'
     id 'maven-publish'
-    id 'sml6' version '0.3.0-a20260826'
+    id 'sml6' version '0.3.0-a20260828'
     id 'eclipse'
 }
 
@@ -245,7 +245,7 @@ dependencies {
 
     sllLauncher 'org.stianloader:launcher-micromixin:4.0.0-a20260611'
 
-    dependencyMods('de.geolykt:starloader-api:2.0.0:remapped') {
+    dependencyMods('de.geolykt:starloader-api:2.0.0-a20260824:remapped') {
         transitive = false
     }
 
@@ -267,11 +267,26 @@ dependencies {
 
     // Source: https://mvnrepository.com/artifact/com.code-disaster.steamworks4j/steamworks4j-gdx
     lwjgl3Classpath 'com.code-disaster.steamworks4j:steamworks4j-gdx:1.10.0'
+
     // Source: https://mvnrepository.com/artifact/com.badlogicgames.gdx/gdx-backend-lwjgl3
-    lwjgl3Classpath 'com.badlogicgames.gdx:gdx-backend-lwjgl3:1.14.2'
+    lwjgl3Classpath("com.badlogicgames.gdx:gdx-backend-lwjgl3:${libGDXVersion}") {
+        exclude group: 'org.lwjgl', module: 'lwjgl'
+        exclude group: 'org.lwjgl', module: 'lwjgl-glfw'
+        exclude group: 'org.lwjgl', module: 'lwjgl-openal'
+        exclude group: 'org.lwjgl', module: 'lwjgl-opengl'
+        exclude group: 'org.lwjgl', module: 'lwjgl-jemalloc'
+        exclude group: 'org.lwjgl', module: 'lwjgl-stb'
+    }
+
     // Source: https://mvnrepository.com/artifact/com.badlogicgames.gdx/gdx-platform
-    lwjgl3Classpath 'com.badlogicgames.gdx:gdx-platform:1.14.2:natives-desktop'
+    lwjgl3Classpath "com.badlogicgames.gdx:gdx-platform:${libGDXVersion}:natives-desktop"
     lwjgl3Classpath 'com.thoughtworks.xstream:xstream:1.4.7'
+
+    for (String classifier : ['', ':natives-linux', ':natives-linux-arm32', ':natives-linux-arm64']) { // windows and mac support has been dropped.
+        for (String variant: ['', '-openal', '-opengl', '-glfw', '-jemalloc', '-stb', '-harfbuzz', '-freetype']) {
+            lwjgl3Classpath "org.lwjgl:lwjgl${variant}:${lwjglVersion}${classifier}"
+        }
+    }
 
     runtimeGalimulator 'org.stianloader:lwjgl3ify:2.0.0-a20260820'
 }
@@ -292,6 +307,7 @@ task runMods(type: org.stianloader.sml6.tasks.SLLJavaExecTask) {
     systemProperties.put('org.stianloader.sll.log.level', 'DEBUG')
     systemProperties.put('org.stianloader.micromixin.debug', true)
     systemProperties.put('org.stianloader.lwjgl3ify.killOnReturn', true)
+    systemProperties.put('de.geolykt.s2dmenues.preferX11', true)
 
     javaLauncher = javaToolchains.launcherFor {
         languageVersion = JavaLanguageVersion.of(25)
