@@ -283,7 +283,7 @@ dependencies {
     lwjgl3Classpath 'com.thoughtworks.xstream:xstream:1.4.7'
 
     for (String classifier : ['', ':natives-linux', ':natives-linux-arm32', ':natives-linux-arm64']) { // windows and mac support has been dropped.
-        for (String variant: ['', '-openal', '-opengl', '-glfw', '-jemalloc', '-stb', '-harfbuzz', '-freetype']) {
+        for (String variant: ['', '-openal', '-opengl', '-glfw', '-jemalloc', '-stb', '-harfbuzz']) {
             lwjgl3Classpath "org.lwjgl:lwjgl${variant}:${lwjglVersion}${classifier}"
         }
     }

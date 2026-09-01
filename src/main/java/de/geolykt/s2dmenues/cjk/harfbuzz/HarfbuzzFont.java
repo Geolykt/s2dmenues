@@ -10,8 +10,6 @@ import org.lwjgl.util.harfbuzz.HarfBuzz;
 
 import com.badlogic.gdx.utils.Disposable;
 
-import de.geolykt.s2dmenues.cjk.freetype.FreeTypeFace;
-
 public class HarfbuzzFont implements AutoCloseable, Closeable, Disposable {
 
     private final long address;
@@ -22,14 +20,6 @@ public class HarfbuzzFont implements AutoCloseable, Closeable, Disposable {
 
         if (this.address == 0) {
             throw new IllegalStateException("Unable to create font from face: Unknown cause.");
-        }
-    }
-
-    public HarfbuzzFont(@NotNull FreeTypeFace ftFace) {
-        this.address = HarfBuzz.hb_ft_font_create_referenced(ftFace.getFaceAddress());
-
-        if (this.address == 0) {
-            throw new IllegalStateException("Unable to create font from freetype face: Unknown cause.");
         }
     }
 
