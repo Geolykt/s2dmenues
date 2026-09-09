@@ -162,6 +162,10 @@ public class HarfBuzzBuffer implements AutoCloseable, Closeable, Disposable {
         this.checkFreed();
         HarfBuzz.hb_shape(font.getAddress(), this.address, null);
 
+        if (!HarfBuzz.hb_buffer_has_positions(this.address)) {
+            throw new IllegalStateException("Buffer without glyph positions.");
+        }
+
         hb_glyph_info_t.@Nullable Buffer glyphInfos = HarfBuzz.hb_buffer_get_glyph_infos(this.address);
         hb_glyph_position_t.@Nullable Buffer glyphPositions = HarfBuzz.hb_buffer_get_glyph_positions(this.address);
 

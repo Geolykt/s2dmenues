@@ -36,6 +36,16 @@ public class HarfbuzzFont implements AutoCloseable, Closeable, Disposable {
         HarfBuzz.hb_font_destroy(this.address);
     }
 
+    @Override
+    public void dispose() {
+        this.close();
+    }
+
+    public long getAddress() {
+        this.checkFreed();
+        return this.address;
+    }
+
     public int @NotNull[] getScale() {
         this.checkFreed();
 
@@ -47,18 +57,14 @@ public class HarfbuzzFont implements AutoCloseable, Closeable, Disposable {
         }
     }
 
+    public void setScale(int xScale, int yScale) {
+        this.checkFreed();
+
+        HarfBuzz.hb_font_set_scale(this.address, xScale, yScale);
+    }
+
     public void useFreetypeRendering() {
         this.checkFreed();
         HarfBuzz.hb_ft_font_set_funcs(this.address);
-    }
-
-    @Override
-    public void dispose() {
-        this.close();
-    }
-
-    public long getAddress() {
-        this.checkFreed();
-        return this.address;
     }
 }

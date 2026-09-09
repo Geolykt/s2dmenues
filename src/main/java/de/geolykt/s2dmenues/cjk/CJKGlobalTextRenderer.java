@@ -171,13 +171,14 @@ public class CJKGlobalTextRenderer implements Disposable, Closeable {
             for (int i = 0; i < glyphsShaped.length; i++) {
                 ShapedGlyph rawGlyph = glyphsShaped[i];
 
-                int relXOff = relX + rawGlyph.xOffset();
-                int relYOff = relY + rawGlyph.yOffset();
+                @NotNull
+                GlyphCacheInfo glyph = this.gpuState.lookupGlyph(this.hbFont, rawGlyph.glyphIndex());
+
+                int relXOff = relX + (rawGlyph.xOffset() + glyph.x());
+                int relYOff = glyph.height() - relY + (rawGlyph.yOffset() + glyph.y());
                 float renderX = x + relXOff * fontScale;
                 float renderY = y + relYOff * fontScale;
 
-                @NotNull
-                GlyphCacheInfo glyph = this.gpuState.lookupGlyph(this.hbFont, rawGlyph.glyphIndex());
                 glyphOut.add(new RenderedGlyphInfo(rawGlyph, relXOff, relYOff, glyph));
 
                 if (!glyph.empty()) {
