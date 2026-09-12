@@ -17,9 +17,11 @@ public class ForceX11Mixins {
         if (Boolean.getBoolean("de.geolykt.s2dmenues.preferX11")) {
             // Renderdoc requires X11, so if the user requests it there needs to be an option to prefer X11 where available.
             GLFW.glfwInitHint(GLFW.GLFW_PLATFORM, GLFW.GLFW_PLATFORM_X11);
-        } else if (!Boolean.getBoolean("de.geolykt.s2dmenues.noDisableLibdecor")) {
-            // lwjgl-harfbuzz is incompatible with libdecor (only an issue on Wayland).
-            GLFW.glfwInitHint(GLFW.GLFW_WAYLAND_LIBDECOR, GLFW.GLFW_WAYLAND_DISABLE_LIBDECOR);
+        } else {
+            if (!Boolean.getBoolean("de.geolykt.s2dmenues.noDisableLibdecor")) {
+                // lwjgl-harfbuzz is incompatible with libdecor (only an issue on Wayland).
+                GLFW.glfwInitHint(GLFW.GLFW_WAYLAND_LIBDECOR, GLFW.GLFW_WAYLAND_DISABLE_LIBDECOR);
+            }
         }
     }
 }

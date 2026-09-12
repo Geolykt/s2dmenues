@@ -53,7 +53,7 @@ public class AsyncUniverseRenderer extends Widget implements Disposable {
     private static class AURInputAdapter extends InputAdapter {
         @Override
         public boolean scrolled(float amountX, float amountY) {
-            GalFX.zoom((amountX + amountY) * 0.1F + 1F);
+            GalFX.zoom((float) Math.hypot(amountX, amountY) * 0.1F + 1F);
 
             return true;
         }

@@ -34,6 +34,7 @@ repositories {
 
     mavenCentral()
     mavenLocal()
+    maven { url "https://central.sonatype.com/repository/maven-snapshots" }
 }
 
 configurations {
@@ -265,6 +266,10 @@ dependencies {
         exclude group: 'com.badlogicgames.gdx', module: 'gdx'
     }
 
+    lwjgl3Classpath("org.stianloader:jxkbwayland:$jxkbWaylandVersion") {
+        transitive = false
+    }
+
     // Source: https://mvnrepository.com/artifact/com.code-disaster.steamworks4j/steamworks4j-gdx
     lwjgl3Classpath 'com.code-disaster.steamworks4j:steamworks4j-gdx:1.10.0'
 
@@ -308,10 +313,13 @@ task runMods(type: org.stianloader.sml6.tasks.SLLJavaExecTask) {
     systemProperties.put('org.stianloader.micromixin.debug', true)
     systemProperties.put('org.stianloader.lwjgl3ify.killOnReturn', true)
     systemProperties.put('de.geolykt.s2dmenues.preferX11', true)
+    systemProperties.put('de.geolykt.s2dmenues.noDisableLibdecor', true)
+    systemProperties.put('org.lwjgl.util.Debug', true)
+    systemProperties.put('org.lwjgl.util.DebugLoader', false)
 
     javaLauncher = javaToolchains.launcherFor {
         languageVersion = JavaLanguageVersion.of(25)
-        //vendor = JvmVendorSpec.JETBRAINS
+        vendor = JvmVendorSpec.ADOPTIUM
     }
 
     renderdocExecutable = 'renderdoc_1.45/bin/renderdoccmd'
@@ -328,18 +336,21 @@ processResources {
     def tenpatchVersion = project.property('tenpatchVersion')
     def textraTypistVersion = project.property('textraTypistVersion')
     def starCellShadingVersion = project.property('starCellShadingVersion')
+    def jxkbWaylandVersion = project.property('jxkbWaylandVersion')
 
     inputs.property('version', version)
     inputs.property('tenpatchVersion', tenpatchVersion)
     inputs.property('textraTypistVersion', textraTypistVersion)
     inputs.property('starCellShadingVersion', starCellShadingVersion)
+    inputs.property('jxkbWaylandVersion', jxkbWaylandVersion)
 
     filesMatching('extension.json') {
         expand(
             'version': version,
             'tenpatchVersion': tenpatchVersion,
             'textraTypistVersion': textraTypistVersion,
-            'starCellShadingVersion': starCellShadingVersion
+            'starCellShadingVersion': starCellShadingVersion,
+            'jxkbWaylandVersion': jxkbWaylandVersion
         )
     }
 }

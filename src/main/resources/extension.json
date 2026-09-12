@@ -37,7 +37,15 @@
                 "exclusions": [
                     "com.badlogicgames.gdx:gdx"
                 ]
-            },
+            }, {
+                "group": "org.stianloader",
+                "artifact": "jxkbwayland",
+                "version": "${jxkbWaylandVersion}",
+                "exclusions": [
+                    "org.lwjgl:lwjgl-glfw",
+                    "org.jetbrains:annotations"
+                ]
+            }
         ]
     }
 }
