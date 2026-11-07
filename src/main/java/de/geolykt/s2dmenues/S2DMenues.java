@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import net.minestom.server.extras.selfmodification.MinestomRootClassLoader;
 
 import de.geolykt.s2dmenues.asm.TextraMASMTransformer;
-import de.geolykt.s2dmenues.components.RasterizedSVGStore;
 import de.geolykt.starloader.Starloader;
 import de.geolykt.starloader.api.event.EventHandler;
 import de.geolykt.starloader.api.event.EventManager;
@@ -146,19 +145,11 @@ public class S2DMenues extends Extension {
             @EventHandler
             public void onAtlasStitched(@NotNull AtlasPackedEvent evt) throws IOException {
                 FontConfig.getInstance().bakeFonts(evt);
-
-                if (RasterizedSVGStore.isAvailable()) {
-                    RasterizedSVGStore.onAtlasNotification(evt);
-                }
             }
 
             @EventHandler
             public void onAtlasStitch(@NotNull AtlasPackingEvent evt) throws IOException {
                 FontConfig.getInstance().registerTextures(evt);
-
-                if (RasterizedSVGStore.isAvailable()) {
-                    RasterizedSVGStore.rasterize(evt);
-                }
             }
 
             @EventHandler(EventPriority.HIGH)

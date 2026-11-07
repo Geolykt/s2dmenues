@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.InputMultiplexer;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.input.GestureDetector;
@@ -24,7 +23,6 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.ui.Widget;
 import com.badlogic.gdx.utils.Disposable;
 
-import de.geolykt.s2dmenues.components.RasterizedSVGStore;
 import de.geolykt.s2dmenues.components.drawables.FullViewportDrawable;
 import de.geolykt.s2dmenues.render.aur.AURStarRenderer;
 import de.geolykt.s2dmenues.render.aur.AURStarlaneRenderer;
@@ -112,10 +110,6 @@ public class AsyncUniverseRenderer extends Widget implements Disposable {
         int fullHeight = Gdx.graphics.getBackBufferHeight();
         batch.setProjectionMatrix(new Matrix4().translate(-1F, -1F, 0F).scale(2F / fullWidth, 2F / fullHeight, 0F));
         batch.begin();
-
-        batch.setColor(Color.WHITE);
-        batch.draw(RasterizedSVGStore.getRegion(RasterizedSVGStore.CONFIGURE_ICON), 0, 0, Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
-        batch.flush();
 
         this.renderUniverse(batch);
 

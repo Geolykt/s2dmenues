@@ -265,12 +265,6 @@ dependencies {
         exclude group: 'com.badlogicgames.gdx', module: 'gdx'
     }
 
-    compileOnlyApi("com.github.codemonstur:simplexml:$simpleXmlVersion") {
-        exclude group: 'org.objenesis', module: 'objenesis'
-    }
-
-    compileOnlyApi("org.joml:joml:$jomlVersion")
-
     lwjgl3Classpath("org.stianloader:jxkbwayland:$jxkbWaylandVersion") {
         transitive = false
     }
@@ -344,16 +338,12 @@ processResources {
     def textraTypistVersion = project.property('textraTypistVersion')
     def starCellShadingVersion = project.property('starCellShadingVersion')
     def jxkbWaylandVersion = project.property('jxkbWaylandVersion')
-    def simpleXmlVersion = project.property('simpleXmlVersion')
-    def jomlVersion = project.property('jomlVersion')
 
     inputs.property('version', version)
     inputs.property('tenpatchVersion', tenpatchVersion)
     inputs.property('textraTypistVersion', textraTypistVersion)
     inputs.property('starCellShadingVersion', starCellShadingVersion)
     inputs.property('jxkbWaylandVersion', jxkbWaylandVersion)
-    inputs.property('simpleXmlVersion', simpleXmlVersion)
-    inputs.property('jomlVersion', jomlVersion)
 
     filesMatching('extension.json') {
         expand(
@@ -361,9 +351,7 @@ processResources {
             'tenpatchVersion': tenpatchVersion,
             'textraTypistVersion': textraTypistVersion,
             'starCellShadingVersion': starCellShadingVersion,
-            'jxkbWaylandVersion': jxkbWaylandVersion,
-            'simpleXmlVersion': simpleXmlVersion,
-            'jomlVersion': jomlVersion
+            'jxkbWaylandVersion': jxkbWaylandVersion
         )
     }
 }
