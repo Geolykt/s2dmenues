@@ -146,19 +146,13 @@ public class S2DMenues extends Extension {
             @EventHandler
             public void onAtlasStitched(@NotNull AtlasPackedEvent evt) throws IOException {
                 FontConfig.getInstance().bakeFonts(evt);
-
-                if (RasterizedSVGStore.isAvailable()) {
-                    RasterizedSVGStore.onAtlasNotification(evt);
-                }
+                RasterizedSVGStore.onAtlasNotification(evt);
             }
 
             @EventHandler
             public void onAtlasStitch(@NotNull AtlasPackingEvent evt) throws IOException {
                 FontConfig.getInstance().registerTextures(evt);
-
-                if (RasterizedSVGStore.isAvailable()) {
-                    RasterizedSVGStore.rasterize(evt);
-                }
+                RasterizedSVGStore.rasterize(evt);
             }
 
             @EventHandler(EventPriority.HIGH)
