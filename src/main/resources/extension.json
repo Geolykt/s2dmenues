@@ -45,6 +45,17 @@
                     "org.lwjgl:lwjgl-glfw",
                     "org.jetbrains:annotations"
                 ]
+            }, {
+                "group": "com.github.codemonstur",
+                "artifact": "simplexml",
+                "version": "${simpleXmlVersion}",
+                "exclusions": [
+                    "org.objenesis:objenesis"
+                ]
+            }, {
+                "group": "org.joml",
+                "artifact": "joml",
+                "version": "${jomlVersion}"
             }
         ]
     }
