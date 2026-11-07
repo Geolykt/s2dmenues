@@ -1,6 +1,5 @@
 package de.geolykt.s2dmenues;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -15,11 +14,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
-import com.badlogic.gdx.Gdx;
-
 import net.minestom.server.extras.selfmodification.MinestomRootClassLoader;
 
 import de.geolykt.s2dmenues.asm.TextraMASMTransformer;
+import de.geolykt.s2dmenues.components.RasterizedSVGStore;
 import de.geolykt.starloader.Starloader;
 import de.geolykt.starloader.api.event.EventHandler;
 import de.geolykt.starloader.api.event.EventManager;
@@ -99,14 +97,7 @@ public class S2DMenues extends Extension {
                         throw new IOException("Resource '" + filepath + "' is not located within the mod's classpath.");
                     }
 
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    byte[] buffer = new byte[4096];
-
-                    for (int read = is.read(buffer); read != -1; read = is.read(buffer)) {
-                        baos.write(buffer, 0, read);
-                    }
-
-                    return new String(baos.toByteArray(), StandardCharsets.UTF_8);
+                    return new String(is.readAllBytes(), StandardCharsets.UTF_8);
                 } catch (IOException e) {
                     throw new UncheckedIOException("Unable to read string from jar", e);
                 }
@@ -148,25 +139,31 @@ public class S2DMenues extends Extension {
         }
 
         if (ApplicationStartedEvent.hasStarted()) {
-            Gdx.app.postRunnable(MainMenuProvider::display);
-        } else {
-            EventManager.registerListener(new Listener() {
-                @EventHandler(EventPriority.HIGH)
-                public void onPostStart(@NotNull ApplicationStartedEvent evt) {
-                    MainMenuProvider.display();
-                }
-            });
+            throw new AssertionError("S2DMenues does not support hotswapping/hot reloading due to the way it handles atlas packing.");
         }
 
         EventManager.registerListener(new Listener() {
             @EventHandler
-            public void onAtlasSitched(@NotNull AtlasPackedEvent evt) throws IOException {
+            public void onAtlasStitched(@NotNull AtlasPackedEvent evt) throws IOException {
                 FontConfig.getInstance().bakeFonts(evt);
+
+                if (RasterizedSVGStore.isAvailable()) {
+                    RasterizedSVGStore.onAtlasNotification(evt);
+                }
             }
 
             @EventHandler
             public void onAtlasStitch(@NotNull AtlasPackingEvent evt) throws IOException {
                 FontConfig.getInstance().registerTextures(evt);
+
+                if (RasterizedSVGStore.isAvailable()) {
+                    RasterizedSVGStore.rasterize(evt);
+                }
+            }
+
+            @EventHandler(EventPriority.HIGH)
+            public void onPostStart(@NotNull ApplicationStartedEvent evt) {
+                MainMenuProvider.display();
             }
 
             @EventHandler

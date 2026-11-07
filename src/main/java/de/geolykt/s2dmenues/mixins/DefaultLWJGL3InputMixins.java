@@ -29,37 +29,11 @@ import de.geolykt.s2dmenues.keybinds.LinuxInput;
 public class DefaultLWJGL3InputMixins {
 
     @Unique
-    private static boolean s2dmenues$hasInitializedXKB;
-
-    @Unique
     @NotNull
     private static Arena s2dmenues$arena = Arena.ofAuto();
 
-    @Inject(at = @At("HEAD"), target = @Desc(value = "windowHandleChanged", args = long.class), require = 1, expect = 1)
-    private void s2dmenues$setupJXKBWayland(long windowHandle, @Nullable CallbackInfo ci) {
-        if (DefaultLWJGL3InputMixins.s2dmenues$hasInitializedXKB) {
-            return;
-        }
-
-        DefaultLWJGL3InputMixins.s2dmenues$hasInitializedXKB = true;
-
-        if (GLFW.glfwGetPlatform() == GLFW.GLFW_PLATFORM_X11) {
-            LoggerFactory.getLogger(DefaultLWJGL3InputMixins.class).warn("s2dmenues: X11 is not officially supported. Please use Wayland, keyboard-related bugs are of your own making. Using libkxbcommon as a partial fallback.");
-            LinuxInput.initialize(); // No need to poll for events in this branch
-            return;
-        } else if (GLFW.glfwGetPlatform() != GLFW.GLFW_PLATFORM_WAYLAND) {
-            LoggerFactory.getLogger(DefaultLWJGL3InputMixins.class).error("s2dmenues: Unsupported environment. Please use Wayland, keyboard-related bugs are of your own making.");
-            // Nothing to initialize in this branch
-            return;
-        } else {
-            // Wayland branch
-            LinuxInput.initialize();
-            // Force process wayland events (what could go wrong?) to ensure that JXKBWayland is initialized
-            // - otherwise we would have two dead frames as we wait for libGDX to call this method twice eventually.
-            GLFW.glfwPollEvents();
-            GLFW.glfwPollEvents();
-        }
-    }
+    @Unique
+    private static boolean s2dmenues$hasInitializedXKB;
 
     @Inject(at = @At("TAIL"), target = @Desc(value = "windowHandleChanged", args = long.class), require = 1, expect = 1)
     private void s2dmenues$registerGLFWkeyCallbacks(long windowHandle, @Nullable CallbackInfo ci) {
@@ -93,5 +67,31 @@ public class DefaultLWJGL3InputMixins {
         MemorySegment upcallStub = linker.upcallStub(callbackMethodHandle, keyCallbackDescriptor, DefaultLWJGL3InputMixins.s2dmenues$arena);
 
         GLFW.nglfwSetKeyCallback(windowHandle, upcallStub.address());
+    }
+
+    @Inject(at = @At("HEAD"), target = @Desc(value = "windowHandleChanged", args = long.class), require = 1, expect = 1)
+    private void s2dmenues$setupJXKBWayland(long windowHandle, @Nullable CallbackInfo ci) {
+        if (DefaultLWJGL3InputMixins.s2dmenues$hasInitializedXKB) {
+            return;
+        }
+
+        DefaultLWJGL3InputMixins.s2dmenues$hasInitializedXKB = true;
+
+        if (GLFW.glfwGetPlatform() == GLFW.GLFW_PLATFORM_X11) {
+            LoggerFactory.getLogger(DefaultLWJGL3InputMixins.class).warn("s2dmenues: X11 is not officially supported. Please use Wayland, keyboard-related bugs are of your own making. Using libkxbcommon as a partial fallback.");
+            LinuxInput.initialize(); // No need to poll for events in this branch
+            return;
+        } else if (GLFW.glfwGetPlatform() != GLFW.GLFW_PLATFORM_WAYLAND) {
+            LoggerFactory.getLogger(DefaultLWJGL3InputMixins.class).error("s2dmenues: Unsupported environment. Please use Wayland, keyboard-related bugs are of your own making.");
+            // Nothing to initialize in this branch
+            return;
+        } else {
+            // Wayland branch
+            LinuxInput.initialize();
+            // Force process wayland events (what could go wrong?) to ensure that JXKBWayland is initialized
+            // - otherwise we would have two dead frames as we wait for libGDX to call this method twice eventually.
+            GLFW.glfwPollEvents();
+            GLFW.glfwPollEvents();
+        }
     }
 }

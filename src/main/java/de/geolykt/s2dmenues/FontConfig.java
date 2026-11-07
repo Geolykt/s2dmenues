@@ -127,7 +127,7 @@ public class FontConfig {
 
         public void bakeFont(@NotNull AtlasPackedEvent evt) throws IOException {
             if (this.textraFont != null) {
-                throw new IllegalStateException("#submitFontTextures called twice on object");
+                throw new IllegalStateException("#bakeFont called twice on object");
             } else if (this.hugeFont) {
                 return; // Huge fonts get loaded lazily
             }

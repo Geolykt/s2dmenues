@@ -34,7 +34,6 @@ repositories {
 
     mavenCentral()
     mavenLocal()
-    maven { url "https://central.sonatype.com/repository/maven-snapshots" }
 }
 
 configurations {
@@ -246,7 +245,7 @@ dependencies {
 
     sllLauncher 'org.stianloader:launcher-micromixin:4.0.0-a20260611'
 
-    dependencyMods('de.geolykt:starloader-api:2.0.0-a20260824:remapped') {
+    dependencyMods("de.geolykt:starloader-api:${slapiVersion}:remapped") {
         transitive = false
     }
 
@@ -265,6 +264,12 @@ dependencies {
     compileOnly("com.github.tommyettinger:textratypist:$textraTypistVersion") {
         exclude group: 'com.badlogicgames.gdx', module: 'gdx'
     }
+
+    compileOnlyApi("com.github.codemonstur:simplexml:$simpleXmlVersion") {
+        exclude group: 'org.objenesis', module: 'objenesis'
+    }
+
+    compileOnlyApi("org.joml:joml:$jomlVersion")
 
     lwjgl3Classpath("org.stianloader:jxkbwayland:$jxkbWaylandVersion") {
         transitive = false
@@ -294,6 +299,8 @@ dependencies {
     }
 
     runtimeGalimulator 'org.stianloader:lwjgl3ify:2.0.0-a20260820'
+
+    compileOnlyApi 'org.jspecify:jspecify:1.0.1'
 }
 
 task runMods(type: org.stianloader.sml6.tasks.SLLJavaExecTask) {
@@ -337,12 +344,16 @@ processResources {
     def textraTypistVersion = project.property('textraTypistVersion')
     def starCellShadingVersion = project.property('starCellShadingVersion')
     def jxkbWaylandVersion = project.property('jxkbWaylandVersion')
+    def simpleXmlVersion = project.property('simpleXmlVersion')
+    def jomlVersion = project.property('jomlVersion')
 
     inputs.property('version', version)
     inputs.property('tenpatchVersion', tenpatchVersion)
     inputs.property('textraTypistVersion', textraTypistVersion)
     inputs.property('starCellShadingVersion', starCellShadingVersion)
     inputs.property('jxkbWaylandVersion', jxkbWaylandVersion)
+    inputs.property('simpleXmlVersion', simpleXmlVersion)
+    inputs.property('jomlVersion', jomlVersion)
 
     filesMatching('extension.json') {
         expand(
@@ -350,7 +361,9 @@ processResources {
             'tenpatchVersion': tenpatchVersion,
             'textraTypistVersion': textraTypistVersion,
             'starCellShadingVersion': starCellShadingVersion,
-            'jxkbWaylandVersion': jxkbWaylandVersion
+            'jxkbWaylandVersion': jxkbWaylandVersion,
+            'simpleXmlVersion': simpleXmlVersion,
+            'jomlVersion': jomlVersion
         )
     }
 }
